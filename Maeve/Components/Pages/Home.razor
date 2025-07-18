@@ -1,0 +1,134 @@
+﻿@page "/"
+
+@using Maeve.Components.Database
+@using Markdig
+@using Microsoft.EntityFrameworkCore
+@using OllamaSharp
+@using OllamaSharp.Models
+@using OllamaSharp.Models.Chat
+@using Message = Maeve.Components.Database.Message
+
+@inject IOllamaApiClient OllamaApiClient
+@inject IDbContextFactory<DataContext> DbContextFactory
+
+<PageTitle>Home</PageTitle>
+
+<div class="flex flex-col mb-56">
+    <div class="flex flex-col gap-2">
+        @foreach (var message in Messages) {
+            <div class="chat @(message.Role == Role.Assistant ? "chat-start" : "chat-end")">
+                <div class="chat-bubble @(message.Role == Role.User ? "chat-bubble-primary" : "") text-sm">
+                    @((MarkupString)Markdown.ToHtml(message.Content))
+                </div>
+            </div>
+            <div class="flex @(message.Role == Role.Assistant ? "justify-start" : "justify-end") items-center w-full gap-2">
+                <div class="text-base-content/50 text-xs">@message.CreatedAt.ToString("d MMMM yyyy, HH:mm")</div>
+            </div>
+        }
+        
+        @if (_isLoading || _response != null) {
+            <div class="chat chat-start">
+                <div class="chat-bubble text-sm">
+                    @if (_isLoading) {
+                        <span class="loading loading-dots loading-md"></span>
+                    }
+                    else {
+                        @((MarkupString)Markdown.ToHtml(_response ?? ""))
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<div class="fixed bottom-0 container mx-auto h-48">
+    <div class="text-base-content flex justify-center items-center py-8 rounded-t-xl gap-2 bg-base-100 h-full w-full px-10">
+        <textarea @bind="_query" class="textarea w-full bg-base-100" @bind:event="oninput" @onkeydown="OnKeyDown"></textarea>
+    </div>
+</div>
+
+@code {
+    
+    // - Private Properties
+
+    private string _query = "";
+    private bool _isLoading;
+    private string? _response;
+    
+    private Chat? _chat;
+    private DataContext? _dataContext;
+    private IEnumerable<Model> _models = [];
+
+    private Message[] Messages => _dataContext?.Messages.OrderBy(m => m.CreatedAt).ToArray() ?? [];
+
+    protected override async Task OnInitializedAsync() {
+        if (!RendererInfo.IsInteractive) return;
+
+        _dataContext = await DbContextFactory.CreateDbContextAsync();
+        _chat = new Chat(OllamaApiClient);
+        
+        _chat.Messages.AddRange(Messages.Select(m => new OllamaSharp.Models.Chat.Message(new ChatRole(m.Role.Key()), m.Content)));
+        
+        try {
+            var version = await OllamaApiClient.GetVersionAsync();
+            _models = await OllamaApiClient.ListLocalModelsAsync();
+            Console.WriteLine(version);
+        } catch (Exception e) {
+            Console.WriteLine(e);
+        }
+    }
+    
+    
+    // - Private Functions
+    
+    private async Task OnKeyDown(KeyboardEventArgs e) {
+        if ((e.Code == "Enter" || e.Code == "NumpadEnter") && !e.ShiftKey) {
+            await PerformQuery();
+        }
+    }
+
+    private async Task PerformQuery() {
+        if (_dataContext == null || _chat == null || _query.Trim() == "") return;
+        
+        _isLoading = true;
+
+        var message = new Message {
+            Content = _query,
+            CreatedAt = DateTime.UtcNow,
+            Role = Role.User
+        };
+        _dataContext.Messages.Add(message);
+        await _dataContext.SaveChangesAsync();
+
+        var query = _query;
+        _query = "";
+
+        var response = _chat.SendAsync(query);
+        await foreach (var token in response) {
+            if (_isLoading) {
+                _isLoading = false;
+            }
+
+            if (_response == null) {
+                _response = token;
+            } else {
+                _response += token;
+            }
+            
+            await InvokeAsync(StateHasChanged);
+        }
+
+        if (_response != null) {
+            var assistantMessage = new Message {
+                Role = Role.Assistant,
+                Content = _response,
+                CreatedAt = DateTime.UtcNow
+            };
+            _dataContext.Messages.Add(assistantMessage);
+            await _dataContext.SaveChangesAsync();
+        }
+
+        _response = null;
+    }
+
+}

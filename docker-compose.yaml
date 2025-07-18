@@ -1,0 +1,7 @@
+﻿services:
+  maeve:
+    image: maeve
+    build:
+      context: .
+      dockerfile: Maeve/Dockerfile
+
