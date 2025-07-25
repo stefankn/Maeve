@@ -1,0 +1,15 @@
+[project]
+name = "rag-mcp-server"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "chromadb>=1.0.15",
+    "chromadbx>=0.1.0",
+    "langchain-chroma>=0.2.4",
+    "langchain-community>=0.3.27",
+    "langchain-ollama>=0.3.5",
+    "mcp[cli]>=1.12.0",
+    "pymupdf>=1.26.3",
+]

@@ -7,6 +7,7 @@ public class DataContext: DbContext {
     // - Properties
 
     public DbSet<Message> Messages { get; set; } = null!;
+    public DbSet<Document> Documents { get; set; } = null!;
     
     
     // - Functions

@@ -1,6 +1,10 @@
+using Maeve;
 using Maeve.Components;
 using Maeve.Components.Database;
+using Maeve.MCP;
+using Maeve.Logging;
 using OllamaSharp;
+using ILogger = Maeve.Logging.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddHttpClient();
@@ -8,17 +12,25 @@ builder.Services.AddHttpClient();
 // Database
 builder.Services.AddDbContextFactory<DataContext>();
 
+// Logging
+builder.Logging.ClearProviders();
+builder.Services.AddSingleton<ILogger>(provider => new Logger("Maeve", provider.GetRequiredService<IWebHostEnvironment>().IsDevelopment()));
+
+builder.Services.AddTransient<IDocumentProcessor, DocumentProcessor>();
+
 // Ollama
 builder.Services.AddTransient<IOllamaApiClient>(_ => {
     var host = Environment.GetEnvironmentVariable("OLLAMA_HOST") ?? "host.docker.internal";
     var port = Environment.GetEnvironmentVariable("OLLAMA_PORT") ?? "11434";
-    return new OllamaApiClient($"http://{host}:{port}", "gemma3:12b");
+    return new OllamaApiClient($"http://{host}:{port}", "qwen3:14b");
 });
 
 // Blazor
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddSingleton<IOrchestrator, Orchestrator>();
 
 var app = builder.Build();
 
