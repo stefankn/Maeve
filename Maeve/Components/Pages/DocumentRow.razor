@@ -60,10 +60,7 @@
         
         if (Document.IsProcessed || _disposable != null) return;
         
-        Console.WriteLine($"Observing document {Document.Filename}");
-        
         _disposable = DocumentProcessor.Observe(Document).Subscribe(document => {
-            Console.WriteLine("document state change");
             if (document == null) return;
             _state = document.State;
             InvokeAsync(StateHasChanged);
@@ -73,7 +70,6 @@
     // IDisposable Functions
     
     public void Dispose() {
-        Console.WriteLine("document row disposed");
         _disposable?.Dispose();
         _disposable = null;
     }

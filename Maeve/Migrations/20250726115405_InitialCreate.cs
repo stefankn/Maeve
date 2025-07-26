@@ -34,7 +34,9 @@ namespace Maeve.Migrations
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     Role = table.Column<int>(type: "INTEGER", nullable: false),
                     Content = table.Column<string>(type: "TEXT", nullable: false),
-                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    Thoughts = table.Column<string>(type: "TEXT", nullable: true),
+                    CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Tools = table.Column<string>(type: "TEXT", nullable: true)
                 },
                 constraints: table =>
                 {

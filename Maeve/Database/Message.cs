@@ -12,5 +12,7 @@ public class Message {
     
     public Role Role { get; set; }
     public required string Content { get; set; }
+    public string? Thoughts { get; set; }
+    public List<Tool> Tools { get; set; } = [];
     public DateTime CreatedAt { get; set; }
 }

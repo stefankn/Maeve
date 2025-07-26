@@ -17,4 +17,11 @@ public class DataContext: DbContext {
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
         optionsBuilder.UseSqlite("Data Source=data/Maeve.db");
     }
+
+    protected override void OnModelCreating(ModelBuilder modelBuilder) {
+        modelBuilder.Entity<Message>().OwnsMany(message => message.Tools, builder => {
+            builder.ToJson();
+            builder.OwnsMany(tool => tool.Arguments);
+        });
+    }
 }

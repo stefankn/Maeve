@@ -10,6 +10,7 @@ using OllamaSharp.Tools;
 using ILogger = Maeve.Logging.ILogger;
 using Message = Maeve.Database.Message;
 using OllamaMessage = OllamaSharp.Models.Chat.Message;
+using Tool = Maeve.Database.Tool;
 
 namespace Maeve.Conversations;
 
@@ -26,13 +27,13 @@ public class ConversationContext: IConversationContext {
     private readonly List<Message> _messages = [];
     private string? _thoughts;
     private string? _response;
-    private string? _toolCallDescription;
+    private readonly List<Tool> _usedTools = [];
     
     
     // - Properties
 
     public event EventHandler<string?>? Thoughts;
-    public event EventHandler<string?>? ToolInvoked;
+    public event EventHandler<Tool?>? ToolInvoked;
     public event EventHandler<Message>? NewMessage;
     public event EventHandler<string?>? Response;
 
@@ -114,6 +115,8 @@ public class ConversationContext: IConversationContext {
             var assistantMessage = new Message {
                 Role = Role.Assistant,
                 Content = _response,
+                Thoughts = _thoughts,
+                Tools = _usedTools,
                 CreatedAt = DateTime.Now
             };
             _messages.Add(assistantMessage);
@@ -125,6 +128,9 @@ public class ConversationContext: IConversationContext {
         }
         
         _response = null;
+        _thoughts = null;
+        _usedTools.Clear();
+        
         Response?.Invoke(this, _response);
     }
     
@@ -137,11 +143,8 @@ public class ConversationContext: IConversationContext {
             }
 
             if (_response.Trim() != "") {
-                _toolCallDescription = null;
-                _thoughts = null;
-                
-                ToolInvoked?.Invoke(this, _toolCallDescription);
-                Thoughts?.Invoke(this, _thoughts);
+                ToolInvoked?.Invoke(this, null);
+                Thoughts?.Invoke(this, null);
             }
  
             Response?.Invoke(this, _response);
@@ -164,27 +167,23 @@ public class ConversationContext: IConversationContext {
     }
     
     private void OnToolCall(object? toolCall, OllamaMessage.ToolCall call) {
-        if (call.Function == null) return;
-        
-        _logger.Information($"Tool call - {ToolFunctionDescriptionFor(call.Function)}", LogCategory.Tools, consoleLog: true);
+        if (call.Function?.Name == null) return;
 
-        _toolCallDescription = $"Tool called: {ToolFunctionDescriptionFor(call.Function)}";
-        ToolInvoked?.Invoke(this, _toolCallDescription);
+        var arguments = call.Function.Arguments?
+            .Select(arg => new Tool.Argument { Key = arg.Key, Value = arg.Value?.ToString() })
+            .ToList();
+        
+        var tool = new Tool {
+            Function = call.Function.Name,
+            Arguments = arguments ?? []
+        };
+        _logger.Information($"Tool call - {tool.Description}", LogCategory.Tools, consoleLog: true);
+        
+        _usedTools.Add(tool);
+        ToolInvoked?.Invoke(this, tool);
     }
     
     private void OnToolResult(object? sender, ToolResult e) {
-        if (e.ToolCall.Function == null) return;
         
-        _logger.Information($"Tool response received - {ToolFunctionDescriptionFor(e.ToolCall.Function)}", LogCategory.Tools, consoleLog: true);
-        _logger.Information($"{e.Result}", LogCategory.Tools);
-    }
-
-    private string ToolFunctionDescriptionFor(OllamaSharp.Models.Chat.Message.Function function) {
-        var arguments = "none";
-        if (function.Arguments != null) {
-            arguments = JsonSerializer.Serialize(function.Arguments);
-        }
-
-        return $"{function.Name}, arguments: {arguments}";
     }
 }
