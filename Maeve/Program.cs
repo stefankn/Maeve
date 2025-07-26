@@ -1,10 +1,11 @@
 using Maeve.Components;
+using Maeve.Conversations;
 using Maeve.Database;
 using Maeve.Documents;
-using Maeve.MCP;
 using Maeve.Logging;
 using OllamaSharp;
 using StackExchange.Redis;
+using ConversationContext = Maeve.Conversations.ConversationContext;
 using ILogger = Maeve.Logging.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -21,6 +22,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(connectionMultiplexer);
 builder.Logging.ClearProviders();
 builder.Services.AddSingleton<ILogger>(provider => new Logger("Maeve", provider.GetRequiredService<IWebHostEnvironment>().IsDevelopment()));
 
+// Documents
 builder.Services.AddTransient<IDocumentIngestClient, DocumentIngestClient>();
 builder.Services.AddSingleton<IDocumentProcessor, DocumentProcessor>();
 
@@ -30,13 +32,12 @@ builder.Services.AddTransient<IOllamaApiClient>(_ => {
     var port = Environment.GetEnvironmentVariable("OLLAMA_PORT") ?? "11434";
     return new OllamaApiClient($"http://{host}:{port}", "qwen3:14b");
 });
+builder.Services.AddTransient<IConversationContext, ConversationContext>();
 
 // Blazor
 builder.Services
     .AddRazorComponents()
     .AddInteractiveServerComponents();
-
-builder.Services.AddSingleton<IOrchestrator, Orchestrator>();
 
 var app = builder.Build();
 

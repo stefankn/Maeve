@@ -1,20 +1,12 @@
 ﻿@page "/"
 
-@using System.Text.Json
-@using Maeve.Database
+@using Maeve.Conversations
 @using Maeve.Logging
-@using Maeve.MCP
 @using Markdig
-@using Microsoft.EntityFrameworkCore
-@using OllamaSharp
-@using OllamaSharp.Tools
-@using ChatRole = OllamaSharp.Models.Chat.ChatRole
 @using Message = Maeve.Database.Message
 @using Role = Maeve.Database.Role
 
-@inject IOllamaApiClient OllamaApiClient
-@inject IDbContextFactory<DataContext> DbContextFactory
-@inject IOrchestrator Orchestrator
+@inject IConversationContext ConversationContext
 @inject ILogger Logger
 @inject IJSRuntime JsRuntime
 
@@ -22,46 +14,53 @@
 
 <div class="flex flex-col mb-56">
     <div class="flex flex-col gap-2">
-        @foreach (var message in _messages) {
-            <div class="chat @(message.Role == Role.Assistant ? "chat-start" : "chat-end")">
-                <div class="chat-bubble @(message.Role == Role.User ? "chat-bubble-primary" : "") text-sm">
-                    @((MarkupString)Markdown.ToHtml(message.Content))
+        @if (_isLoading) {
+            <div class="w-full flex justify-center mt-20">
+                <span class="loading loading-spinner loading-xl"></span>
+            </div>
+        } else {
+            @foreach (var message in Messages) {
+                <div class="chat @(message.Role == Role.Assistant ? "chat-start" : "chat-end")">
+                    <div class="chat-bubble @(message.Role == Role.User ? "chat-bubble-primary" : "") text-sm">
+                        @((MarkupString)Markdown.ToHtml(message.Content))
+                    </div>
                 </div>
-            </div>
-            <div class="flex @(message.Role == Role.Assistant ? "justify-start" : "justify-end") items-center w-full gap-2">
-                <div class="text-base-content/50 text-xs">@message.CreatedAt.ToString("d MMMM yyyy, HH:mm")</div>
-            </div>
+                <div class="flex @(message.Role == Role.Assistant ? "justify-start" : "justify-end") items-center w-full gap-2">
+                    <div class="text-base-content/50 text-xs">@message.CreatedAt.ToString("d MMMM yyyy, HH:mm")</div>
+                </div>
+            }
         }
-        
-        @if (_isLoading || _response != null) {
+
+        @if (_isResponding || _response != null) {
             <div class="chat chat-start">
                 <div class="chat-bubble text-sm">
-                    @if (_isLoading) {
+                    @if (_isResponding) {
                         <span class="loading loading-dots loading-md"></span>
-                    } else {
+                    }
+                    else {
                         @((MarkupString)Markdown.ToHtml(_response ?? ""))
                     }
                 </div>
             </div>
         }
-        
+
         @if (_thoughts != null) {
             <div class="flex flex-col gap-2 pl-20">
                 <div role="alert" class="alert alert-info alert-soft flex items-start gap-2">
                     <div class="min-w-8 animate-pulse">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
                     </div>
                     <span>@_thoughts</span>
                 </div>
-                    
+
                 @if (_toolCallDescription != null) {
                     <div role="alert" class="alert alert-warning alert-soft flex items-center gap-2">
                         <div class="min-w-8 animate-pulse">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75a4.5 4.5 0 0 1-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 1 1-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 0 1 6.336-4.486l-3.276 3.276a3.004 3.004 0 0 0 2.25 2.25l3.276-3.276c.256.565.398 1.192.398 1.852Z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.867 19.125h.008v.008h-.008v-.008Z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75a4.5 4.5 0 0 1-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 1 1-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 0 1 6.336-4.486l-3.276 3.276a3.004 3.004 0 0 0 2.25 2.25l3.276-3.276c.256.565.398 1.192.398 1.852Z"/>
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.867 19.125h.008v.008h-.008v-.008Z"/>
                             </svg>
                         </div>
                         <span>@_toolCallDescription</span>
@@ -83,36 +82,25 @@
     // - Private Properties
 
     private string _query = "";
-    private bool _isLoading;
+    private bool _isLoading = true;
+    private bool _isResponding;
 
     private string? _thoughts;
     private string? _response;
     private string? _toolCallDescription;
     
-    private Chat? _chat;
-    private DataContext? _dataContext;
-    private List<Message> _messages = [];
+    private Message[] Messages => ConversationContext.Messages;
 
     protected override async Task OnInitializedAsync() {
         if (!RendererInfo.IsInteractive) return;
-
-        _dataContext = await DbContextFactory.CreateDbContextAsync();
         
-        _chat = new Chat(OllamaApiClient, "") { Think = true };
-        _chat.OnThink += OnThink;
-        _chat.OnToolCall += OnToolCall;
-        _chat.OnToolResult += OnToolResult;
+        ConversationContext.NewMessage += OnNewMessage;
+        ConversationContext.Thoughts += OnThoughts;
+        ConversationContext.Response += OnResponse;
+        ConversationContext.ToolInvoked += OnToolInvocation;
 
-        _messages = _dataContext?.Messages.OrderBy(m => m.CreatedAt).ToList() ?? [];
-;        _chat.Messages.AddRange(_messages.Select(m => new OllamaSharp.Models.Chat.Message(new ChatRole(m.Role.Key()), m.Content)));
-        
-        try {
-            var version = await OllamaApiClient.GetVersionAsync();
-            Logger.Information($"Ollama version: {version}", LogCategory.Llm, consoleLog: true);
-        } catch (Exception e) {
-            Logger.Error("Failed to connect to Ollama", LogCategory.Llm, consoleLog: true);
-            Logger.Error(e.ToString(), LogCategory.Llm);
-        }
+        await ConversationContext.StartConversation();
+        _isLoading = false;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender) {
@@ -131,96 +119,49 @@
     }
 
     private async Task PerformQuery() {
-        if (_dataContext == null || _chat == null || _query.Trim() == "") return;
-        
-        _isLoading = true;
-
-        var message = new Message {
-            Content = _query,
-            CreatedAt = DateTime.UtcNow,
-            Role = Role.User
-        };
-        _messages.Add(message);
-        _query = "";
+        _isResponding = true;
+        await ConversationContext.SendMessage(_query);
+    }
+    
+    private void OnNewMessage(object? sender, Message message) {
+        if (message.Role == Role.User) {
+            _query = "";
+        }
         
         StateHasChanged();
-        
-        _dataContext.Messages.Add(message);
-        await _dataContext.SaveChangesAsync();
-
-        try {
-            var tools = await Orchestrator.GetTools();
-            var response = _chat.SendAsync(message.Content, tools);
-            await foreach (var token in response) {
-                if (_response == null) {
-                    _response = token;
-                } else {
-                    _response += token;
-                }
-
-                if (_response.Trim() != "" && _isLoading) {
-                    _isLoading = false;
-                    _thoughts = null;
-                    _toolCallDescription = null;
-                }
-            
-                await InvokeAsync(StateHasChanged);
-                await ScrollToBottom();
-            }
-            
-            if (_response != null) {
-                var assistantMessage = new Message {
-                    Role = Role.Assistant,
-                    Content = _response,
-                    CreatedAt = DateTime.UtcNow
-                };
-                _messages.Add(assistantMessage);
-                _dataContext.Messages.Add(assistantMessage);
-                await _dataContext.SaveChangesAsync();
-            }
-        
-            _response = null;
-        
-            await ScrollToBottom();
-        } catch (Exception e) {
-            Console.WriteLine(e);
-        }
-    }
-
-    private void OnToolCall(object? toolCall, OllamaSharp.Models.Chat.Message.ToolCall call) {
-        if (call.Function == null) return;
-        
-        Logger.Information($"Tool call - {ToolFunctionDescriptionFor(call.Function)}", LogCategory.Tools, consoleLog: true);
-
-        _toolCallDescription = $"Tool called: {ToolFunctionDescriptionFor(call.Function)}";
-        InvokeAsync(StateHasChanged);
     }
     
-    private void OnToolResult(object? sender, ToolResult e) {
-        if (e.ToolCall.Function == null) return;
-        
-        Logger.Information($"Tool response received - {ToolFunctionDescriptionFor(e.ToolCall.Function)}", LogCategory.Tools, consoleLog: true);
-        Logger.Information($"{e.Result}", LogCategory.Tools);
-    }
-
-    private string ToolFunctionDescriptionFor(OllamaSharp.Models.Chat.Message.Function function) {
-        var arguments = "none";
-        if (function.Arguments != null) {
-            arguments = JsonSerializer.Serialize(function.Arguments);
-        }
-
-        return $"{function.Name}, arguments: {arguments}";
-    }
-    
-    private void OnThink(object? sender, string e) {
-        if (_thoughts == null) {
-            _thoughts = e;
-        } else {
-            _thoughts += e;
-        }
+    private void OnThoughts(object? sender, string? thoughts) {
+        _thoughts = thoughts;
 
         InvokeAsync(StateHasChanged);
-        Task.Run(async () => await ScrollToBottom());
+        
+        if (thoughts != null) {
+            Task.Run(async () => await ScrollToBottom());
+        }
+    }
+    
+    private void OnResponse(object? sender, string? response) {
+        _response = response;
+        
+        InvokeAsync(StateHasChanged);
+
+        if (_response != null && _response.Trim() != "") {
+            _isResponding = false;
+        }
+
+        if (response != null) {
+            Task.Run(async () => await ScrollToBottom());
+        }
+    }
+    
+    private void OnToolInvocation(object? sender, string? toolCallDescription) {
+        _toolCallDescription = toolCallDescription;
+        InvokeAsync(StateHasChanged);
+
+        if (toolCallDescription != null) {
+            Task.Run(async () => await ScrollToBottom());
+        }
     }
     
     private async Task ScrollToBottom() {
