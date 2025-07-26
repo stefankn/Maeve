@@ -1,4 +1,4 @@
-namespace Maeve.Components.Database;
+namespace Maeve.Database;
 
 public enum Role {
     [Key("user")]

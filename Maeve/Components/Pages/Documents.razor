@@ -1,0 +1,105 @@
+@page "/documents"
+
+@using Maeve.Database
+@using Maeve.Documents
+@using Maeve.Logging
+@using Microsoft.EntityFrameworkCore
+
+@inject IDbContextFactory<DataContext> DbContextFactory
+@inject IDocumentProcessor DocumentProcessor
+@inject ILogger Logger
+@inject IWebHostEnvironment Environment
+
+<PageTitle>Maeve :: documents</PageTitle>
+
+<fieldset class="fieldset">
+    <legend class="fieldset-legend">Upload document</legend>
+    <InputFile class="file-input" OnChange="UploadDocument" disabled="@_isUploading" multiple></InputFile>
+</fieldset>
+
+<div class="flex w-full">
+    @if (_isLoading) {
+        <div class="w-full flex justify-center mt-20">
+            <span class="loading loading-spinner loading-xl"></span>
+        </div>
+    } else if (_documents.Length > 0) {
+        <ul class="w-full list bg-base-100 rounded-box">
+            <li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Uploaded documents</li>
+            @foreach (var document in _documents) {
+                <DocumentRow Document="document" Delete="DeleteDocument"></DocumentRow>
+            }
+        </ul>
+    } else {
+        <div>No documents uploaded</div>
+    }
+</div>
+
+@code {
+    
+    // - Private Properties
+
+    private bool _isLoading = true;
+    private bool _isUploading;
+    private Document[] _documents = [];
+    
+    
+    // - Functions
+
+    protected override async Task OnInitializedAsync() {
+        if (!RendererInfo.IsInteractive) return;
+
+        await Update();
+    }
+
+
+    // - Private Functions
+    
+    private async Task Update() {
+        _isLoading = true;
+        await using var dataContext = await DbContextFactory.CreateDbContextAsync();
+
+        _documents = await dataContext.Documents.AsNoTracking().OrderByDescending(d => d.UploadedAt).ToArrayAsync();
+
+        _isLoading = false;
+        StateHasChanged();
+    }
+    
+    private async Task UploadDocument(InputFileChangeEventArgs e) {
+        _isUploading = true;
+
+        var file = e.GetMultipleFiles().FirstOrDefault();
+        if (file != null) {
+            try {
+                await DocumentProcessor.Upload(file);
+                await Update();
+            } catch (Exception ex) {
+                Logger.Error($"Failed to upload document", LogCategory.Documents, consoleLog: true);
+                Logger.Error(ex.ToString(), LogCategory.Documents);
+            }
+        }
+
+        _isUploading = false;
+    }
+    
+    private async Task DeleteDocument(Document document) {
+        await using var dataContext = await DbContextFactory.CreateDbContextAsync();
+        var doc = await dataContext.Documents.FindAsync(document.Id);
+        if (doc == null) return;
+        
+        try {
+            var path = Path.Combine(Environment.WebRootPath, "documents", doc.Filename);
+            if (File.Exists(path)) {
+                File.Delete(path);
+            }
+
+            dataContext.Documents.Remove(doc);
+            await dataContext.SaveChangesAsync();
+            await Update();
+
+            await DocumentProcessor.Delete(document);
+        } catch (Exception e) {
+            Logger.Error("Failed to delete document", LogCategory.Documents, consoleLog: true);
+            Logger.Error(e.ToString(), LogCategory.Documents);
+        }
+    }
+}

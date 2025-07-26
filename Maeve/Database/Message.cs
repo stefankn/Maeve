@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations.Schema;
 
-namespace Maeve.Components.Database;
+namespace Maeve.Database;
 
 [Table("messages")]
 public class Message {

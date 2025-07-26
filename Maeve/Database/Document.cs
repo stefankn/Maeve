@@ -1,7 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using Microsoft.EntityFrameworkCore;
 
-namespace Maeve.Components.Database;
+namespace Maeve.Database;
 
 [Table("documents")]
 [Index(nameof(Hash), IsUnique = true)]
@@ -15,5 +15,8 @@ public class Document {
     public required string Name { get; init; } = null!;
     public required string Filename { get; init; } = null!;
     public required string Hash { get; init; } = null!;
+    public DocumentState State { get; set; } = DocumentState.Uploading;
     public DateTime UploadedAt { get; init; }
+    
+    public bool IsProcessed => State is DocumentState.Failed or DocumentState.Vectorized;
 }

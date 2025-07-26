@@ -1,9 +1,37 @@
 services:
-  chroma_db:
+  chroma:
+    container_name: maeve-chroma
     image: chromadb/chroma
     volumes:
       - chroma_data:/data
     ports:
       - "8000:8000"
+  redis:
+    container_name: maeve-redis
+    image: redis:latest
+    volumes:
+      - redis_data:/data
+    ports:
+      - "6380:6379"
+  rag-ingester:
+    container_name: maeve-rag-ingester
+    image: rag-ingester
+    build:
+      context: rag-ingester
+      dockerfile: Dockerfile
+    environment:
+      MAEVE_HOST: "host.docker.internal:5284"
+    ports:
+      - "8001:80"
+    depends_on:
+      - chroma
+      - redis
+  rag-mcp-server:
+    container_name: maeve-rag-mcp-server
+    image: rag-mcp-server
+    build:
+      context: rag-mcp-server
+      dockerfile: Dockerfile
 volumes:
   chroma_data:
+  redis_data:

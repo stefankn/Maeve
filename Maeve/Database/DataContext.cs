@@ -1,6 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 
-namespace Maeve.Components.Database;
+namespace Maeve.Database;
 
 public class DataContext: DbContext {
     

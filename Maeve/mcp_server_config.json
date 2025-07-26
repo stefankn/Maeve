@@ -1,12 +1,17 @@
 {
   "mcpServers": {
     "rag": {
-      "command": "docker",
+      "command": "docker-compose",
       "args": [
+        "-f",
+        "../docker-compose.dev.yaml",
+        "exec",
+        "rag-mcp-server",
+        "uv",
         "run",
-        "-i",
-        "--rm",
-        "rag-mcp-server"
+        "mcp",
+        "run",
+        "main.py"
       ]
     }
   }

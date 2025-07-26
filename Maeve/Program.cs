@@ -1,9 +1,10 @@
-using Maeve;
 using Maeve.Components;
-using Maeve.Components.Database;
+using Maeve.Database;
+using Maeve.Documents;
 using Maeve.MCP;
 using Maeve.Logging;
 using OllamaSharp;
+using StackExchange.Redis;
 using ILogger = Maeve.Logging.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -12,11 +13,16 @@ builder.Services.AddHttpClient();
 // Database
 builder.Services.AddDbContextFactory<DataContext>();
 
+// Redis
+var connectionMultiplexer = ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_HOST") ?? "redis");
+builder.Services.AddSingleton<IConnectionMultiplexer>(connectionMultiplexer);
+
 // Logging
 builder.Logging.ClearProviders();
 builder.Services.AddSingleton<ILogger>(provider => new Logger("Maeve", provider.GetRequiredService<IWebHostEnvironment>().IsDevelopment()));
 
-builder.Services.AddTransient<IDocumentProcessor, DocumentProcessor>();
+builder.Services.AddTransient<IDocumentIngestClient, DocumentIngestClient>();
+builder.Services.AddSingleton<IDocumentProcessor, DocumentProcessor>();
 
 // Ollama
 builder.Services.AddTransient<IOllamaApiClient>(_ => {

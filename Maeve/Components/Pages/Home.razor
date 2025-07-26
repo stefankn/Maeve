@@ -1,7 +1,7 @@
 ﻿@page "/"
 
 @using System.Text.Json
-@using Maeve.Components.Database
+@using Maeve.Database
 @using Maeve.Logging
 @using Maeve.MCP
 @using Markdig
@@ -9,37 +9,16 @@
 @using OllamaSharp
 @using OllamaSharp.Tools
 @using ChatRole = OllamaSharp.Models.Chat.ChatRole
-@using Message = Maeve.Components.Database.Message
-@using Role = Maeve.Components.Database.Role
+@using Message = Maeve.Database.Message
+@using Role = Maeve.Database.Role
 
 @inject IOllamaApiClient OllamaApiClient
 @inject IDbContextFactory<DataContext> DbContextFactory
-@inject IDocumentProcessor DocumentProcessor
 @inject IOrchestrator Orchestrator
 @inject ILogger Logger
 @inject IJSRuntime JsRuntime
 
-<PageTitle>Home</PageTitle>
-
-<fieldset class="fieldset">
-    <legend class="fieldset-legend">Upload document</legend>
-    <InputFile class="file-input" OnChange="UploadDocument" disabled="@_isUploading" multiple></InputFile>
-</fieldset>
-
-<div class="flex w-full">
-    @if (_documents.Length > 0) {
-        <ul class="w-full list bg-base-100 rounded-box">
-            <li class="p-4 pb-2 text-xs opacity-60 tracking-wide">Uploaded documents</li>
-            @foreach (var document in _documents) {
-                <li class="list-row">
-                    @document.Filename
-                </li>
-            }
-        </ul>
-    } else {
-        <div>No documents uploaded</div>
-    }
-</div>
+<PageTitle>Maeve</PageTitle>
 
 <div class="flex flex-col mb-56">
     <div class="flex flex-col gap-2">
@@ -112,15 +91,12 @@
     
     private Chat? _chat;
     private DataContext? _dataContext;
-    private bool _isUploading;
-    private Document[] _documents = [];
     private List<Message> _messages = [];
 
     protected override async Task OnInitializedAsync() {
         if (!RendererInfo.IsInteractive) return;
 
         _dataContext = await DbContextFactory.CreateDbContextAsync();
-        _documents = await _dataContext.Documents.AsNoTracking().OrderByDescending(d => d.UploadedAt).ToArrayAsync();
         
         _chat = new Chat(OllamaApiClient, "") { Think = true };
         _chat.OnThink += OnThink;
@@ -148,22 +124,6 @@
 
     // - Private Functions
     
-    private async Task UploadDocument(InputFileChangeEventArgs e) {
-        _isUploading = true;
-
-        var file = e.GetMultipleFiles().FirstOrDefault();
-        if (file != null) {
-            try {
-                await DocumentProcessor.Upload(file);
-            } catch (Exception ex) {
-                Logger.Error($"Failed to upload document", LogCategory.Documents, consoleLog: true);
-                Logger.Error(ex.ToString(), LogCategory.Documents);
-            }
-        }
-
-        _isUploading = false;
-    }
-    
     private async Task OnKeyDown(KeyboardEventArgs e) {
         if ((e.Code == "Enter" || e.Code == "NumpadEnter") && !e.ShiftKey) {
             await PerformQuery();
@@ -188,39 +148,43 @@
         _dataContext.Messages.Add(message);
         await _dataContext.SaveChangesAsync();
 
-        var tools = await Orchestrator.GetTools();
-        var response = _chat.SendAsync(message.Content, tools);
-        await foreach (var token in response) {
-            if (_response == null) {
-                _response = token;
-            } else {
-                _response += token;
-            }
+        try {
+            var tools = await Orchestrator.GetTools();
+            var response = _chat.SendAsync(message.Content, tools);
+            await foreach (var token in response) {
+                if (_response == null) {
+                    _response = token;
+                } else {
+                    _response += token;
+                }
 
-            if (_response.Trim() != "" && _isLoading) {
-                _isLoading = false;
-                _thoughts = null;
-                _toolCallDescription = null;
+                if (_response.Trim() != "" && _isLoading) {
+                    _isLoading = false;
+                    _thoughts = null;
+                    _toolCallDescription = null;
+                }
+            
+                await InvokeAsync(StateHasChanged);
+                await ScrollToBottom();
             }
             
-            await InvokeAsync(StateHasChanged);
+            if (_response != null) {
+                var assistantMessage = new Message {
+                    Role = Role.Assistant,
+                    Content = _response,
+                    CreatedAt = DateTime.UtcNow
+                };
+                _messages.Add(assistantMessage);
+                _dataContext.Messages.Add(assistantMessage);
+                await _dataContext.SaveChangesAsync();
+            }
+        
+            _response = null;
+        
             await ScrollToBottom();
+        } catch (Exception e) {
+            Console.WriteLine(e);
         }
-
-        if (_response != null) {
-            var assistantMessage = new Message {
-                Role = Role.Assistant,
-                Content = _response,
-                CreatedAt = DateTime.UtcNow
-            };
-            _messages.Add(assistantMessage);
-            _dataContext.Messages.Add(assistantMessage);
-            await _dataContext.SaveChangesAsync();
-        }
-        
-        _response = null;
-        
-        await ScrollToBottom();
     }
 
     private void OnToolCall(object? toolCall, OllamaSharp.Models.Chat.Message.ToolCall call) {

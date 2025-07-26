@@ -10,8 +10,6 @@ ENV UV_COMPILE_BYTECODE=1
 # Copy from the cache instead of linking since it's a mounted volume
 ENV UV_LINK_MODE=copy
 
-ENV OLLAMA_HOST=host.docker.internal
-
 # Install the project's dependencies using the lockfile and settings
 RUN --mount=type=cache,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
@@ -27,7 +25,4 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
-VOLUME /app/chroma_db
-
-#CMD ["uv", "run", "mcp", "run", "main.py"]
-CMD ["sleep", "infinity"]
+CMD ["fastapi", "run", "main.py", "--port", "80", "--host", "0.0.0.0"]

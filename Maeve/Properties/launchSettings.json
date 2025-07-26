@@ -8,17 +8,9 @@
         "applicationUrl": "http://localhost:5284",
         "environmentVariables": {
           "ASPNETCORE_ENVIRONMENT": "Development",
-          "OLLAMA_HOST": "localhost"
-        }
-      },
-      "https": {
-        "commandName": "Project",
-        "dotnetRunMessages": true,
-        "launchBrowser": false,
-        "applicationUrl": "https://localhost:7165;http://localhost:5284",
-        "environmentVariables": {
-          "ASPNETCORE_ENVIRONMENT": "Development",
-          "OLLAMA_HOST": "localhost"
+          "OLLAMA_HOST": "localhost",
+          "RAG_INGESTER_HOST": "localhost:8001",
+          "REDIS_HOST": "localhost:6380"
         }
       }
     }

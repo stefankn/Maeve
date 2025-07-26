@@ -5,3 +5,11 @@
 @plugin "daisyui" {
     themes: cmyk --default, dark --prefersdark;
 }
+
+.navigation {
+    @apply text-base-content/50;
+}
+
+.navigation .active {
+    @apply text-base-content;
+}

@@ -19,6 +19,7 @@ namespace Maeve.Migrations
                     Name = table.Column<string>(type: "TEXT", nullable: false),
                     Filename = table.Column<string>(type: "TEXT", nullable: false),
                     Hash = table.Column<string>(type: "TEXT", nullable: false),
+                    State = table.Column<int>(type: "INTEGER", nullable: false),
                     UploadedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
                 },
                 constraints: table =>
