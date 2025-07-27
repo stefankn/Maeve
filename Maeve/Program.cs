@@ -3,6 +3,7 @@ using Maeve.Conversations;
 using Maeve.Database;
 using Maeve.Documents;
 using Maeve.Logging;
+using Microsoft.AspNetCore.StaticFiles;
 using OllamaSharp;
 using StackExchange.Redis;
 using ConversationContext = Maeve.Conversations.ConversationContext;
@@ -41,6 +42,13 @@ builder.Services
 
 var app = builder.Build();
 
+var provider = new FileExtensionContentTypeProvider();
+provider.Mappings[".log"] = "text/plain";
+app.UseStaticFiles(new StaticFileOptions {
+    ContentTypeProvider = provider,
+    ServeUnknownFileTypes = true
+});
+
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment()) {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -51,7 +59,6 @@ if (!app.Environment.IsDevelopment()) {
 app.UseHttpsRedirection();
 app.UseAntiforgery();
 
-app.MapStaticAssets();
 app
     .MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();

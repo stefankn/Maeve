@@ -3,13 +3,13 @@ from chromadbx import UUIDGenerator
 from langchain_community.document_loaders import PyMuPDFLoader, TextLoader
 from langchain_chroma import Chroma
 from langchain_ollama import OllamaEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores.utils import filter_complex_metadata
+from redis import Redis
 import os
 import logging
 import requests
 import json
-
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from redis import Redis
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -54,6 +54,7 @@ class Ingester:
 
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=1024, chunk_overlap=100)
             chunks = text_splitter.split_documents(docs)
+            chunks = filter_complex_metadata(chunks)
 
             # Add the file hash as metadata for each chunk
             [doc.metadata.update({"hash": file_hash}) for doc in chunks]
