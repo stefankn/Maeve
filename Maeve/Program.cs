@@ -33,7 +33,7 @@ builder.Services.AddTransient<IOllamaApiClient>(_ => {
     var port = Environment.GetEnvironmentVariable("OLLAMA_PORT") ?? "11434";
     return new OllamaApiClient($"http://{host}:{port}", "qwen3:14b");
 });
-builder.Services.AddTransient<IConversationContext, ConversationContext>();
+builder.Services.AddSingleton<IConversationManager, ConversationManager>();
 
 // Blazor
 builder.Services

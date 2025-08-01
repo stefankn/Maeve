@@ -17,6 +17,27 @@ namespace Maeve.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.7");
 
+            modelBuilder.Entity("Maeve.Database.Conversation", b =>
+                {
+                    b.Property<string>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("conversations");
+                });
+
             modelBuilder.Entity("Maeve.Database.Document", b =>
                 {
                     b.Property<string>("Id")
@@ -59,6 +80,10 @@ namespace Maeve.Migrations
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("ConversationId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
@@ -70,11 +95,19 @@ namespace Maeve.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ConversationId");
+
                     b.ToTable("messages");
                 });
 
             modelBuilder.Entity("Maeve.Database.Message", b =>
                 {
+                    b.HasOne("Maeve.Database.Conversation", "Conversation")
+                        .WithMany("Messages")
+                        .HasForeignKey("ConversationId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.OwnsMany("Maeve.Database.Tool", "Tools", b1 =>
                         {
                             b1.Property<string>("MessageId")
@@ -127,7 +160,14 @@ namespace Maeve.Migrations
                             b1.Navigation("Arguments");
                         });
 
+                    b.Navigation("Conversation");
+
                     b.Navigation("Tools");
+                });
+
+            modelBuilder.Entity("Maeve.Database.Conversation", b =>
+                {
+                    b.Navigation("Messages");
                 });
 #pragma warning restore 612, 618
         }

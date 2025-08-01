@@ -1,4 +1,3 @@
-using System.Text.Json;
 using Maeve.Database;
 using Maeve.Logging;
 using Microsoft.EntityFrameworkCore;
@@ -14,70 +13,75 @@ using Tool = Maeve.Database.Tool;
 
 namespace Maeve.Conversations;
 
-public class ConversationContext: IConversationContext {
+public sealed class ConversationContext: IConversationContext {
     
     // - Private Properties
 
-    private readonly IOllamaApiClient _ollamaApiClient;
-    private readonly ILogger _logger;
     private readonly IDbContextFactory<DataContext> _dbContextFactory;
+    private readonly ILogger _logger;
     private readonly IWebHostEnvironment _environment;
 
     private readonly Chat _chat;
     private readonly List<Message> _messages = [];
-    private string? _thoughts;
-    private string? _response;
     private readonly List<Tool> _usedTools = [];
     
     
     // - Properties
+    
+    public event EventHandler<string?>? OnThoughts;
+    public event EventHandler<Tool?>? OnToolInvocation;
+    public event EventHandler<Message>? OnNewMessage;
+    public event EventHandler<string?>? OnResponse;
 
-    public event EventHandler<string?>? Thoughts;
-    public event EventHandler<Tool?>? ToolInvoked;
-    public event EventHandler<Message>? NewMessage;
-    public event EventHandler<string?>? Response;
-
+    public string Id { get; }
+    public string Title { get; }
+    public bool IsResponding { get; private set; }
     public Message[] Messages => _messages.ToArray();
+    public string? Thoughts { get; private set; }
+    public string? Response { get; private set; }
+    public Tool[] UsedTools => _usedTools.ToArray();
     
     
     // - Construction
 
     public ConversationContext(
+        string conversationId,
         IOllamaApiClient ollamaApiClient,
         IDbContextFactory<DataContext> dbContextFactory,
         ILogger logger,
         IWebHostEnvironment environment
         ) {
-        
-        _ollamaApiClient = ollamaApiClient;
-        _logger = logger;
         _dbContextFactory = dbContextFactory;
+        _logger = logger;
         _environment = environment;
         
+        var dataContext = dbContextFactory.CreateDbContext();
+        var conversation = dataContext.Conversations
+            .Include(c => c.Messages)
+            .FirstOrDefault(c => c.Id == conversationId);
+        if (conversation == null) throw new Exception("Conversation not found");
+        
+        Id = conversationId;
+        Title = conversation.Title;
+
         _chat = new Chat(ollamaApiClient) { Think = true };
         _chat.OnThink += OnThink;
         _chat.OnToolCall += OnToolCall;
         _chat.OnToolResult += OnToolResult;
+        
+        // Construct history
+        _messages.AddRange(conversation.Messages.OrderBy(m => m.CreatedAt));
+        _chat.Messages.AddRange(_messages.Select(m => new OllamaMessage(new ChatRole(m.Role.Key()), m.Content)));
+        
+        var lastMessage = _messages.LastOrDefault();
+        if (lastMessage is { Role: Role.User }) {
+            IsResponding = true;
+            _ = Task.Run(async () => await PerformSend(lastMessage));
+        }
     }
     
     
     // - Functions
-
-    public async Task StartConversation() {
-        await using var dataContext = await _dbContextFactory.CreateDbContextAsync();
-
-        // Fetch history
-        _messages.AddRange(dataContext.Messages.AsNoTracking().OrderBy(m => m.CreatedAt));
-        _chat.Messages.AddRange(_messages.Select(m => new OllamaMessage(new ChatRole(m.Role.Key()), m.Content)));
-        
-        try {
-            var version = await _ollamaApiClient.GetVersionAsync();
-            _logger.Information($"Ollama version: {version}", LogCategory.Llm, consoleLog: true);
-        } catch (Exception e) {
-            _logger.Error("Failed to connect to Ollama", LogCategory.Llm, consoleLog: true);
-            _logger.Error(e.ToString(), LogCategory.Llm);
-        }
-    }
 
     public async Task SendMessage(string query) {
         if (query.Trim() == "") return;
@@ -89,11 +93,18 @@ public class ConversationContext: IConversationContext {
         };
         
         _messages.Add(message);
-        NewMessage?.Invoke(this, message);
+        OnNewMessage?.Invoke(this, message);
+        IsResponding = true;
+        
+        await using var dataContext = await _dbContextFactory.CreateDbContextAsync();
+        var conversation = await dataContext.Conversations
+            .Include(c => c.Messages)
+            .FirstOrDefaultAsync(c => c.Id == Id);
+        if (conversation == null) return;
 
         try {
-            await using var dataContext = await _dbContextFactory.CreateDbContextAsync();
-            dataContext.Messages.Add(message);
+            conversation.Messages.Add(message);
+            conversation.UpdatedAt = DateTime.Now;
             await dataContext.SaveChangesAsync();
             await PerformSend(message);
         } catch (Exception e) {
@@ -111,54 +122,67 @@ public class ConversationContext: IConversationContext {
         var response = _chat.SendAsync(message.Content, tools);
         await AwaitTokens(response);
         
-        if (_response != null) {
-            var assistantMessage = new Message {
-                Role = Role.Assistant,
-                Content = _response,
-                Thoughts = _thoughts,
-                Tools = _usedTools,
-                CreatedAt = DateTime.Now
-            };
-            _messages.Add(assistantMessage);
-            NewMessage?.Invoke(this, assistantMessage);
+        if (Response != null) {
+            try {
+                await using var dataContext = await _dbContextFactory.CreateDbContextAsync();
+                var conversation = await dataContext.Conversations
+                    .Include(c => c.Messages)
+                    .FirstOrDefaultAsync(c => c.Id == Id);
+                if (conversation == null) return;
             
-            await using var dataContext = await _dbContextFactory.CreateDbContextAsync();
-            dataContext.Messages.Add(assistantMessage);
-            await dataContext.SaveChangesAsync();
+                var assistantMessage = new Message {
+                    Role = Role.Assistant,
+                    Content = Response,
+                    Thoughts = Thoughts,
+                    Tools = _usedTools,
+                    CreatedAt = DateTime.Now
+                };
+                _messages.Add(assistantMessage);
+                IsResponding = false;
+                OnNewMessage?.Invoke(this, assistantMessage);
+            
+                conversation.Messages.Add(assistantMessage);
+                conversation.UpdatedAt = DateTime.Now;
+                await dataContext.SaveChangesAsync();
+            } catch (Exception e) {
+                Console.WriteLine(e);
+            }
         }
         
-        _response = null;
-        _thoughts = null;
+        Response = null;
+        Thoughts = null;
         _usedTools.Clear();
         
-        Response?.Invoke(this, _response);
+        OnResponse?.Invoke(this, Response);
     }
     
     private async Task AwaitTokens(IAsyncEnumerable<string> response) {
         await foreach (var token in response) {
-            if (_response == null) {
-                _response = token;
+            if (token.Trim() == "") continue;
+            
+            if (Response == null) {
+                Response = token;
             } else {
-                _response += token;
+                Response += token;
             }
 
-            if (_response.Trim() != "") {
-                ToolInvoked?.Invoke(this, null);
-                Thoughts?.Invoke(this, null);
+            if (Response.Trim() != "") {
+                OnToolInvocation?.Invoke(this, null);
+                OnThoughts?.Invoke(this, null);
             }
  
-            Response?.Invoke(this, _response);
+            OnResponse?.Invoke(this, Response);
         }
     }
     
     private void OnThink(object? sender, string e) {
-        if (_thoughts == null) {
-            _thoughts = e;
+        if (Thoughts == null) {
+            Thoughts = e;
         } else {
-            _thoughts += e;
+            Thoughts += e;
         }
 
-        Thoughts?.Invoke(this, _thoughts);
+        OnThoughts?.Invoke(this, Thoughts);
     }
     
     private async Task<McpClientTool[]> GetTools() {
@@ -180,7 +204,7 @@ public class ConversationContext: IConversationContext {
         _logger.Information($"Tool call - {tool.Description}", LogCategory.Tools, consoleLog: true);
         
         _usedTools.Add(tool);
-        ToolInvoked?.Invoke(this, tool);
+        OnToolInvocation?.Invoke(this, tool);
     }
     
     private void OnToolResult(object? sender, ToolResult e) {

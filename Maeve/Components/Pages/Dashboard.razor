@@ -1,0 +1,56 @@
+@page "/"
+@using Maeve.Database
+@using Maeve.Extensions
+@using Microsoft.EntityFrameworkCore
+
+@inject IDbContextFactory<DataContext> DbContextFactory
+@inject NavigationManager NavigationManager
+
+<div class="flex flex-col gap-6">
+    Dashboard
+    
+    <div class="fixed bottom-0 container mx-auto h-48">
+        <div class="text-base-content flex justify-center items-center py-8 rounded-t-xl gap-2 bg-base-100 h-full w-full px-10">
+            <textarea @bind="_query" class="textarea w-full bg-base-100" @bind:event="oninput" @onkeydown="OnKeyDown"></textarea>
+        </div>
+    </div>
+</div>
+
+@code {
+    
+    // - Private Properties
+
+    private string _query = "";
+
+    
+    // - Private Functions
+    
+    private async Task OnKeyDown(KeyboardEventArgs e) {
+        if ((e.Code == "Enter" || e.Code == "NumpadEnter") && !e.ShiftKey) {
+            await CreateNewConversation();
+        }
+    }
+
+    private async Task CreateNewConversation() {
+        if (_query.Trim() == "") return;
+        
+        await using var dataContext = await DbContextFactory.CreateDbContextAsync();
+        var title = _query.Truncate(50);
+
+        var conversation = new Database.Conversation {
+            Title = title,
+            CreatedAt = DateTime.Now,
+            UpdatedAt = DateTime.Now
+        };
+        var message = new Message {
+            Content = _query,
+            CreatedAt = DateTime.Now,
+            Role = Role.User
+        };
+        conversation.Messages.Add(message);
+        dataContext.Conversations.Add(conversation);
+        await dataContext.SaveChangesAsync();
+        
+        NavigationManager.NavigateTo($"/conversations/{conversation.Id}");
+    }
+}
