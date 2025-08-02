@@ -35,7 +35,8 @@ public class DocumentProcessor(
         var hash = await CalculateFileHash(stream);
         await EnsureUnique(hash);
         
-        var filename = $"{Guid.NewGuid()}-{file.Name}";
+        var id = Guid.NewGuid().ToString();
+        var filename = $"{id.Split("-")[0]}-{file.Name}";
         var path = Path.Combine(environment.WebRootPath, "documents", filename);
         await using FileStream fs = new(path, FileMode.Create);
         await stream.CopyToAsync(fs);

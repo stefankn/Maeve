@@ -24,5 +24,5 @@ public interface IConversationContext {
     
     // - Functions
     
-    public Task SendMessage(string query);
+    public Task SendMessage(string query, Document? document = null);
 }

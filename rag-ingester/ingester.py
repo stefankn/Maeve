@@ -57,7 +57,7 @@ class Ingester:
             chunks = filter_complex_metadata(chunks)
 
             # Add the file hash as metadata for each chunk
-            [doc.metadata.update({"hash": file_hash}) for doc in chunks]
+            [doc.metadata.update({"hash": file_hash, "name": document}) for doc in chunks]
 
             redis.publish(file_hash, json.dumps({
                 "type": "ingest",

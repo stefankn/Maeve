@@ -36,7 +36,7 @@ public sealed class ConversationContext: IConversationContext {
     public string Id { get; }
     public string Title { get; }
     public bool IsResponding { get; private set; }
-    public Message[] Messages => _messages.ToArray();
+    public Message[] Messages => _messages.Where(m => m.Role != Role.System).ToArray();
     public string? Thoughts { get; private set; }
     public string? Response { get; private set; }
     public Tool[] UsedTools => _usedTools.ToArray();
@@ -83,8 +83,23 @@ public sealed class ConversationContext: IConversationContext {
     
     // - Functions
 
-    public async Task SendMessage(string query) {
+    public async Task SendMessage(string query, Document? document = null) {
         if (query.Trim() == "") return;
+        
+        var messagesToStore = new List<Message>();
+
+        if (document != null) {
+            var systemMessage = new Message {
+                Content = $"Use the filename {document.Filename} when using a tool to query a document.",
+                CreatedAt = DateTime.Now,
+                Role = Role.System
+            };
+            _messages.Add(systemMessage);
+            _chat.Messages.Add(new OllamaMessage(new ChatRole(systemMessage.Role.Key()), systemMessage.Content));
+            messagesToStore.Add(systemMessage);
+            
+            _logger.Information($"Adding system message: {systemMessage.Content}", LogCategory.Llm, true);
+        }
         
         var message = new Message {
             Content = query,
@@ -93,6 +108,7 @@ public sealed class ConversationContext: IConversationContext {
         };
         
         _messages.Add(message);
+        messagesToStore.Add(message);
         OnNewMessage?.Invoke(this, message);
         IsResponding = true;
         
@@ -103,7 +119,7 @@ public sealed class ConversationContext: IConversationContext {
         if (conversation == null) return;
 
         try {
-            conversation.Messages.Add(message);
+            messagesToStore.ForEach(m => conversation.Messages.Add(m));
             conversation.UpdatedAt = DateTime.Now;
             await dataContext.SaveChangesAsync();
             await PerformSend(message);
@@ -188,7 +204,13 @@ public sealed class ConversationContext: IConversationContext {
     
     private async Task<McpClientTool[]> GetTools() {
         var config = Path.Combine(_environment.ContentRootPath, "mcp_server_config.json");
-        return await Tools.GetFromMcpServers(config);
+        var tools = await Tools.GetFromMcpServers(config);
+        
+        foreach (var tool in tools) {
+            _logger.Information($"Available tool: {tool.Function?.Name}, {tool.Function?.Description}", LogCategory.Tools, consoleLog: true);
+        }
+
+        return tools;
     }
     
     private void OnToolCall(object? toolCall, OllamaMessage.ToolCall call) {
