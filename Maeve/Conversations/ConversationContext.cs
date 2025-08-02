@@ -129,16 +129,21 @@ public sealed class ConversationContext: IConversationContext {
                     .Include(c => c.Messages)
                     .FirstOrDefaultAsync(c => c.Id == Id);
                 if (conversation == null) return;
-            
+
                 var assistantMessage = new Message {
                     Role = Role.Assistant,
                     Content = Response,
                     Thoughts = Thoughts,
-                    Tools = _usedTools,
                     CreatedAt = DateTime.Now
                 };
+                assistantMessage.Tools.AddRange(_usedTools);
                 _messages.Add(assistantMessage);
                 IsResponding = false;
+                
+                Response = null;
+                Thoughts = null;
+                _usedTools.Clear();
+                
                 OnNewMessage?.Invoke(this, assistantMessage);
             
                 conversation.Messages.Add(assistantMessage);
@@ -148,10 +153,6 @@ public sealed class ConversationContext: IConversationContext {
                 Console.WriteLine(e);
             }
         }
-        
-        Response = null;
-        Thoughts = null;
-        _usedTools.Clear();
         
         OnResponse?.Invoke(this, Response);
     }

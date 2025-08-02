@@ -6,14 +6,13 @@
 @inject IDbContextFactory<DataContext> DbContextFactory
 @inject NavigationManager NavigationManager
 
-<div class="flex flex-col gap-6">
-    Dashboard
+<div class="flex flex-col gap-6 w-full">
+    <div>Dashboard</div>
     
-    <div class="fixed bottom-0 container mx-auto h-48">
-        <div class="text-base-content flex justify-center items-center py-8 rounded-t-xl gap-2 bg-base-100 h-full w-full px-10">
-            <textarea @bind="_query" class="textarea w-full bg-base-100" @bind:event="oninput" @onkeydown="OnKeyDown"></textarea>
-        </div>
-    </div>
+    <fieldset class="fieldset">
+        <legend class="fieldset-legend">Start a new conversation</legend>
+        <textarea @bind="_query" class="textarea w-full bg-base-100" @bind:event="oninput" @onkeydown="OnKeyDown"></textarea>
+    </fieldset>
 </div>
 
 @code {

@@ -27,13 +27,15 @@ public class ConversationManager(
     }
     public IConversationContext[] ActiveConversations => _conversationContexts.Values.ToArray();
     public IConversationContext? FocusedConversation { get; private set; }
+    public event EventHandler<IConversationContext?>? OnConversationFocus;
 
-    
+
     // - Functions
 
     public IConversationContext StartConversation(string conversationId) {
         if (_conversationContexts.TryGetValue(conversationId, out var conversation)) {
             FocusedConversation = conversation;
+            OnConversationFocus?.Invoke(this, conversation);
             return conversation;
         }
 
@@ -41,6 +43,7 @@ public class ConversationManager(
         _conversationContexts[conversationId] = conversationContext;
 
         FocusedConversation = conversationContext;
+        OnConversationFocus?.Invoke(this, conversationContext);
 
         return conversationContext;
     }

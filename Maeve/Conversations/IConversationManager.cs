@@ -9,6 +9,7 @@ public interface IConversationManager {
     public Conversation[] Conversations { get; }
     public IConversationContext[] ActiveConversations { get; }
     public IConversationContext? FocusedConversation { get; }
+    public event EventHandler<IConversationContext?>? OnConversationFocus;
     
     
     // - Functions
