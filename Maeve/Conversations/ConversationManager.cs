@@ -48,7 +48,16 @@ public class ConversationManager(
         return conversationContext;
     }
 
+    public void LeaveConversation(IConversationContext conversationContext) {
+        if (FocusedConversation != conversationContext) return;
+        
+        FocusedConversation = null;
+        OnConversationFocus?.Invoke(this, null);
+    }
+
     public async Task Delete(IConversationContext conversationContext) {
+        if (conversationContext.Id == null) return;
+        
         _conversationContexts.Remove(conversationContext.Id);
         
         await using var dataContext = await dbContextFactory.CreateDbContextAsync();

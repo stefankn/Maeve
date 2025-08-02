@@ -15,5 +15,6 @@ public interface IConversationManager {
     // - Functions
 
     public IConversationContext StartConversation(string conversationId);
+    public void LeaveConversation(IConversationContext conversationContext);
     public Task Delete(IConversationContext conversationContext);
 }
