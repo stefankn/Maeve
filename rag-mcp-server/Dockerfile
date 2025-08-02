@@ -29,5 +29,4 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 VOLUME /app/chroma_db
 
-#CMD ["uv", "run", "mcp", "run", "main.py"]
 CMD ["sleep", "infinity"]

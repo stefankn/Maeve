@@ -22,7 +22,7 @@ public class ConversationManager(
     public Conversation[] Conversations {
         get {
             using var dataContext = dbContextFactory.CreateDbContext();
-            return dataContext.Conversations.ToArray();
+            return dataContext.Conversations.Where(c => !ActiveConversations.Select(ac => ac.Id).Contains(c.Id)).ToArray();
         }
     }
     public IConversationContext[] ActiveConversations => _conversationContexts.Values.ToArray();
