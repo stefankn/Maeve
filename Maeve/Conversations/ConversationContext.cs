@@ -74,10 +74,10 @@ public sealed class ConversationContext: IConversationContext {
         _chat.Messages.AddRange(_messages.Select(m => new OllamaMessage(new ChatRole(m.Role.Key()), m.Content)));
         
         var lastMessage = _messages.LastOrDefault();
-        if (lastMessage is { Role: Role.User }) {
-            IsResponding = true;
-            _ = Task.Run(async () => await PerformSend(lastMessage));
-        }
+        if (lastMessage?.Role != Role.User) return;
+        
+        IsResponding = true;
+        _ = Task.Run(async () => await PerformSend(lastMessage));
     }
     
     

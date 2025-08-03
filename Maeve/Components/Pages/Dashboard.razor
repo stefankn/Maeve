@@ -11,38 +11,38 @@
     
     <fieldset class="fieldset">
         <legend class="fieldset-legend">Start a new conversation</legend>
-        <textarea @bind="_query" class="textarea w-full bg-base-100" @bind:event="oninput" @onkeydown="OnKeyDown"></textarea>
+        <MessageInput OnSendMessage="OnSendMessage"></MessageInput>
     </fieldset>
 </div>
 
 @code {
     
-    // - Private Properties
-
-    private string _query = "";
-
-    
     // - Private Functions
     
-    private async Task OnKeyDown(KeyboardEventArgs e) {
-        if ((e.Code == "Enter" || e.Code == "NumpadEnter") && !e.ShiftKey) {
-            await CreateNewConversation();
-        }
+    private async Task OnSendMessage((string, Document?) message) {
+        await CreateNewConversation(message.Item1, message.Item2);
     }
 
-    private async Task CreateNewConversation() {
-        if (_query.Trim() == "") return;
-        
+    private async Task CreateNewConversation(string query, Document? document) {
         await using var dataContext = await DbContextFactory.CreateDbContextAsync();
-        var title = _query.Truncate(50);
-
+        var title = query.Truncate(50);
+        
         var conversation = new Database.Conversation {
             Title = title,
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now
         };
+        if (document != null) {
+            var systemMessage = new Message {
+                Content = $"Use the filename {document.Filename} when using a tool to query a document.",
+                CreatedAt = DateTime.Now,
+                Role = Role.System
+            };
+            conversation.Messages.Add(systemMessage);
+        }
+        
         var message = new Message {
-            Content = _query,
+            Content = query,
             CreatedAt = DateTime.Now,
             Role = Role.User
         };
