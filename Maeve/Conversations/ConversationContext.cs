@@ -73,6 +73,8 @@ public sealed class ConversationContext: IConversationContext {
         _messages.AddRange(conversation.Messages.OrderBy(m => m.CreatedAt));
         _chat.Messages.AddRange(_messages.Select(m => new OllamaMessage(new ChatRole(m.Role.Key()), m.Content)));
         
+        _ = Task.Run(async () => await GetTools());
+        
         var lastMessage = _messages.LastOrDefault();
         if (lastMessage?.Role != Role.User) return;
         
@@ -109,9 +111,7 @@ public sealed class ConversationContext: IConversationContext {
         
         _messages.Add(message);
         messagesToStore.Add(message);
-        OnNewMessage?.Invoke(this, message);
-        IsResponding = true;
-        
+
         await using var dataContext = await _dbContextFactory.CreateDbContextAsync();
         var conversation = await dataContext.Conversations
             .Include(c => c.Messages)
@@ -122,6 +122,10 @@ public sealed class ConversationContext: IConversationContext {
             messagesToStore.ForEach(m => conversation.Messages.Add(m));
             conversation.UpdatedAt = DateTime.Now;
             await dataContext.SaveChangesAsync();
+            
+            OnNewMessage?.Invoke(this, message);
+            IsResponding = true;
+            
             await PerformSend(message);
         } catch (Exception e) {
             _logger.Error("Failed to send message", LogCategory.Llm, consoleLog: true);
@@ -203,14 +207,21 @@ public sealed class ConversationContext: IConversationContext {
     }
     
     private async Task<McpClientTool[]> GetTools() {
-        var config = Path.Combine(_environment.ContentRootPath, "mcp_server_config.json");
-        var tools = await Tools.GetFromMcpServers(config);
+        Console.WriteLine("Getting tools");
+        try {
+            var config = Path.Combine(_environment.ContentRootPath, "mcp_server_config.json");
+            var tools = await Tools.GetFromMcpServers(config);
         
-        foreach (var tool in tools) {
-            _logger.Information($"Available tool: {tool.Function?.Name}, {tool.Function?.Description}", LogCategory.Tools, consoleLog: true);
+            // foreach (var tool in tools) {
+            //     _logger.Information($"Available tool: {tool.Function?.Name}, {tool.Function?.Description}", LogCategory.Tools, consoleLog: true);
+            // }
+            
+            return tools;
+        } catch (Exception e) {
+            _logger.Error($"Error retrieving tools, {e}", LogCategory.Tools, consoleLog: true);
         }
 
-        return tools;
+        return [];
     }
     
     private void OnToolCall(object? toolCall, OllamaMessage.ToolCall call) {
@@ -231,6 +242,5 @@ public sealed class ConversationContext: IConversationContext {
     }
     
     private void OnToolResult(object? sender, ToolResult e) {
-        
     }
 }

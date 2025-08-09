@@ -92,8 +92,9 @@
 
     private async Task OnKeyDown(KeyboardEventArgs e) {
         if ((e.Code == "Enter" || e.Code == "NumpadEnter") && !e.ShiftKey && _query.Trim() != "") {
-            await OnSendMessage.InvokeAsync((_query, _useDocument));
+            var query = _query;
             _query = "";
+            await OnSendMessage.InvokeAsync((query, _useDocument));
         }
     }
 }

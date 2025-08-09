@@ -2,6 +2,7 @@
 
 @using Maeve.Conversations
 @using Maeve.Database
+@using Maeve.Extensions.Markdown
 @using Maeve.Logging
 @using Markdig
 @using Microsoft.EntityFrameworkCore
@@ -46,7 +47,7 @@
             @foreach (var message in Messages) {
                 <div class="chat @(message.Role == Role.Assistant ? "chat-start" : "chat-end")">
                     <div class="chat-bubble @(message.Role == Role.User ? "chat-bubble-primary" : "") text-sm">
-                        @((MarkupString)Markdown.ToHtml(message.Content))
+                        @((MarkupString)Markdown.ToHtml(message.Content, _markdownPipeline))
                     </div>
                 </div>
                 <div class="flex @(message.Role == Role.Assistant ? "justify-start" : "justify-end") items-center w-full gap-2 ml-2">
@@ -109,9 +110,9 @@
 
         @if (IsResponding || Response != null) {
             <div class="chat chat-start">
-                <div class="chat-bubble text-sm">
+                <div class="chat-bubble text-sm @(Response != null ? "w-full" : "")">
                     @if (Response != null) {
-                        @((MarkupString)Markdown.ToHtml(Response ?? ""))
+                        @((MarkupString)Markdown.ToHtml(Response ?? "", _markdownPipeline))
                     } else {
                         <span class="loading loading-dots loading-md"></span>
                     }
@@ -127,7 +128,10 @@
                             <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
                         </svg>
                     </div>
-                    <span>@Thoughts</span>
+                    <div class="flex flex-col gap-1">
+                        <div class="font-semibold">Thinking...</div>
+                        <div>@Thoughts</div>
+                    </div>
                 </div>
 
                 @foreach (var tool in UsedTools) {
@@ -138,7 +142,10 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.867 19.125h.008v.008h-.008v-.008Z"/>
                             </svg>
                         </div>
-                        <span>@tool.Description</span>
+                        <div class="flex flex-col gap-1">
+                            <div class="font-semibold">Tool call</div>
+                            <div>@tool.Description</div>
+                        </div>
                     </div>
                 }
             </div>
@@ -165,6 +172,10 @@
     // - Private Properties
 
     private IConversationContext? _conversationContext;
+    private readonly MarkdownPipeline _markdownPipeline = new MarkdownPipelineBuilder()
+        .UseAdvancedExtensions()
+        .UseDaisyUi()
+        .Build();
 
     private bool _isLoading = true;
     private bool _isError;
