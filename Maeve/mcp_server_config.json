@@ -13,6 +13,28 @@
         "run",
         "main.py"
       ]
+    },
+    "finch": {
+      "command": "dotnet",
+      "args": [
+        "run",
+        "--project",
+        "../FinchMcpServer/FinchMcpServer.csproj"
+      ]
+    },
+    "hue-mcp": {
+      "command": "docker-compose",
+      "args": [
+        "-f",
+        "../docker-compose.dev.yaml",
+        "exec",
+        "hue-mcp-server",
+        "uv",
+        "run",
+        "mcp",
+        "run",
+        "hue_server.py"
+      ]
     }
   }
 }

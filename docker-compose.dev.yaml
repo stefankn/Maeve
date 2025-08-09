@@ -32,6 +32,16 @@ services:
     build:
       context: rag-mcp-server
       dockerfile: Dockerfile
+  hue-mcp-server:
+    container_name: hue-mcp-server
+    image: hue-mcp-server
+    volumes:
+      - type: bind
+        source: ./community-mcp-servers/hue-mcp/config.json
+        target: /root/.hue-mcp/config.json
+    build:
+      context: community-mcp-servers/hue-mcp
+      dockerfile: Dockerfile
 volumes:
   chroma_data:
   redis_data:
