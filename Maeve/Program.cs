@@ -31,7 +31,7 @@ builder.Services.AddSingleton<IDocumentProcessor, DocumentProcessor>();
 builder.Services.AddTransient<IOllamaApiClient>(_ => {
     var host = Environment.GetEnvironmentVariable("OLLAMA_HOST") ?? "host.docker.internal";
     var port = Environment.GetEnvironmentVariable("OLLAMA_PORT") ?? "11434";
-    return new OllamaApiClient($"http://{host}:{port}", "qwen3:14b");
+    return new OllamaApiClient($"http://{host}:{port}", "gpt-oss:latest");
 });
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
 
