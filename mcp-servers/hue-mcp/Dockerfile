@@ -1,6 +1,9 @@
 ﻿# Use a Python image with uv pre-installed
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
+LABEL name="Phillips Hue"
+LABEL description="Interface for controlling Philips Hue smart lighting systems"
+
 RUN apt update && apt upgrade -y && apt install -y git
 RUN git clone https://github.com/ThomasRohde/hue-mcp.git app
 

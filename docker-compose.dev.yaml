@@ -30,17 +30,17 @@ services:
     container_name: maeve-rag-mcp-server
     image: rag-mcp-server
     build:
-      context: rag-mcp-server
+      context: mcp-servers/rag-mcp-server
       dockerfile: Dockerfile
   hue-mcp-server:
     container_name: hue-mcp-server
     image: hue-mcp-server
     volumes:
       - type: bind
-        source: ./community-mcp-servers/hue-mcp/config.json
+        source: ./mcp-servers/hue-mcp/config.json
         target: /root/.hue-mcp/config.json
     build:
-      context: community-mcp-servers/hue-mcp
+      context: mcp-servers/hue-mcp
       dockerfile: Dockerfile
 volumes:
   chroma_data:

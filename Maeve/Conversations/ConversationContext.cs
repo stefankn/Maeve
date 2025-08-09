@@ -212,9 +212,9 @@ public sealed class ConversationContext: IConversationContext {
             var config = Path.Combine(_environment.ContentRootPath, "mcp_server_config.json");
             var tools = await Tools.GetFromMcpServers(config);
         
-            // foreach (var tool in tools) {
-            //     _logger.Information($"Available tool: {tool.Function?.Name}, {tool.Function?.Description}", LogCategory.Tools, consoleLog: true);
-            // }
+            foreach (var tool in tools) {
+                _logger.Information($"Available tool: {tool.Function?.Name}, {tool.Function?.Description}", LogCategory.Tools, consoleLog: true);
+            }
             
             return tools;
         } catch (Exception e) {

@@ -19,7 +19,7 @@
       "args": [
         "run",
         "--project",
-        "../FinchMcpServer/FinchMcpServer.csproj"
+        "../mcp-servers/FinchMcpServer/FinchMcpServer.csproj"
       ]
     },
     "hue-mcp": {
