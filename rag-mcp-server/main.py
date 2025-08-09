@@ -7,17 +7,35 @@ from mcp.server import FastMCP
 
 mcp = FastMCP("rag-mcp-server")
 
-@mcp.tool("query_single_document", "Search in a document", "Search for relevant information in an already ingested document")
-def query_document(filename: str, query: str) -> str:
+@mcp.tool()
+def query_single_document(filename: str, query: str) -> str:
+    """
+    Search for relevant information in an already ingested document
+
+    Args:
+        filename: The filename of the document
+        query: The query to search for
+
+    Returns:
+        A string with document text related to the query
+    """
+
     vector_store = _get_vector_store()
-    retrieved_docs = vector_store.similarity_search(query=query, filter={"name": filename}, k=5)  # TODO: what is k
+    retrieved_docs = vector_store.similarity_search(query=query, filter={"name": filename}, k=5)
     if not retrieved_docs:
         return f"No information found in the document"
 
     return "\n\n".join(doc.page_content for doc in retrieved_docs)
 
-@mcp.tool("query_all_documents", "Search in all documents", "Search for relevant information in all already ingested documents")
+@mcp.tool()
 def query_all_documents(query: str) -> str:
+    """
+    Search for relevant information in all already ingested documents
+
+    Returns:
+        A string with document text related to the query
+    """
+
     vector_store = _get_vector_store()
 
     retrieved_docs = vector_store.similarity_search(query=query, k=5) # TODO: what is k
