@@ -1,0 +1,3 @@
+[submodule "mcp-servers/applescript-mcp"]
+	path = mcp-servers/applescript-mcp
+	url = https://github.com/joshrutkowski/applescript-mcp

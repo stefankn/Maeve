@@ -28,6 +28,15 @@
         "../mcp-servers/FinchMcpServer/FinchMcpServer.csproj"
       ]
     },
+    "applescript-mcp": {
+      "name": "AppleScript",
+      "description": "Interact with macOS through AppleScript.",
+      "icon": "code-bracket-square",
+      "command": "node",
+      "args": [
+        "../mcp-servers/applescript-mcp/dist/index.js"
+      ]
+    },
     "hue-mcp": {
       "name": "Philips Hue",
       "description": "Interface for controlling Philips Hue smart lightning systems.",
