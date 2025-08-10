@@ -70,6 +70,19 @@ namespace Maeve.Migrations
                     b.ToTable("documents");
                 });
 
+            modelBuilder.Entity("Maeve.Database.KeyValueStore.KeyValueEntry", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("key_value_entries");
+                });
+
             modelBuilder.Entity("Maeve.Database.Message", b =>
                 {
                     b.Property<string>("Id")

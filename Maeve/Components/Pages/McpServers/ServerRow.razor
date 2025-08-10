@@ -1,0 +1,33 @@
+@using Blazor.Heroicons
+@using Maeve.Database.KeyValueStore
+@using Maeve.Extensions
+@using Maeve.ModelContextProtocol
+
+@inject IMcpConfigurator McpConfigurator
+
+<div class="flex justify-between items-center">
+    <div class="flex gap-3 items-center">
+        <Heroicon Name="@(Server.Icon?.DashToCamelCase() ?? HeroiconName.CpuChip)" Type="HeroiconType.Outline" class="size-8"></Heroicon>
+        <div class="flex flex-col">
+            <div class="font-semibold">@Server.Name</div>
+            <div class="text-xs font-semibold opacity-60">@Server.Description</div>
+        </div>
+    </div>
+    <div><input type="checkbox" class="toggle toggle-primary" @bind="IsEnabled" /></div>
+</div>
+
+@code {
+    
+    // - Private Properties
+
+    private bool IsEnabled {
+        get => McpConfigurator.IsEnabled(Server);
+        set => McpConfigurator.ToggleServer(Server, value);
+    }
+    
+    
+    // - Properties
+
+    [Parameter, EditorRequired]
+    public required ServerConfiguration Server { get; set; }
+}

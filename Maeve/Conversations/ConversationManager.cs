@@ -1,4 +1,5 @@
 using Maeve.Database;
+using Maeve.ModelContextProtocol;
 using Microsoft.EntityFrameworkCore;
 using OllamaSharp;
 using ILogger = Maeve.Logging.ILogger;
@@ -9,7 +10,7 @@ public class ConversationManager(
     IOllamaApiClient ollamaApiClient,
     IDbContextFactory<DataContext> dbContextFactory,
     ILogger logger,
-    IWebHostEnvironment environment
+    IMcpConfigurator mcpConfigurator
     ): IConversationManager {
     
     // - Private Properties
@@ -39,7 +40,7 @@ public class ConversationManager(
             return conversation;
         }
 
-        var conversationContext = new ConversationContext(conversationId, ollamaApiClient, dbContextFactory, logger, environment);
+        var conversationContext = new ConversationContext(conversationId, ollamaApiClient, dbContextFactory, logger, mcpConfigurator);
         _conversationContexts[conversationId] = conversationContext;
 
         FocusedConversation = conversationContext;

@@ -1,0 +1,21 @@
+@page "/mcp-servers"
+
+@using Maeve.ModelContextProtocol
+
+@inject IMcpConfigurator McpConfigurator
+
+<PageTitle>Maeve :: MCP servers</PageTitle>
+
+<div class="text-xl font-semibold">MCP servers</div>
+
+@if (McpConfigurator.AvailableServers.Length > 0) {
+    <div class="w-full flex flex-col gap-4">
+        <div class="py-4 text-xs opacity-60 tracking-wide">Available MCP servers</div>
+        
+        @foreach (var server in McpConfigurator.AvailableServers) {
+            <ServerRow Server="server"></ServerRow>
+        }
+    </div>
+} else {
+    <div>No MCP servers available</div>
+}

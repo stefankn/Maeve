@@ -42,6 +42,18 @@ namespace Maeve.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "key_value_entries",
+                columns: table => new
+                {
+                    Key = table.Column<string>(type: "TEXT", nullable: false),
+                    Value = table.Column<string>(type: "TEXT", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_key_value_entries", x => x.Key);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "messages",
                 columns: table => new
                 {
@@ -81,6 +93,9 @@ namespace Maeve.Migrations
         {
             migrationBuilder.DropTable(
                 name: "documents");
+
+            migrationBuilder.DropTable(
+                name: "key_value_entries");
 
             migrationBuilder.DropTable(
                 name: "messages");

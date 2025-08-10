@@ -1,9 +1,6 @@
 ﻿# Use a Python image with uv pre-installed
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-LABEL name="Phillips Hue"
-LABEL description="Interface for controlling Philips Hue smart lighting systems"
-
 RUN apt update && apt upgrade -y && apt install -y git
 RUN git clone https://github.com/ThomasRohde/hue-mcp.git app
 
@@ -15,7 +12,6 @@ ENV UV_COMPILE_BYTECODE=1
 # Install the project's dependencies using the lockfile and settings
 RUN uv sync --locked --no-install-project --no-dev
 
-# Then, add the rest of the project source code and install it
 # Installing separately from its dependencies allows optimal layer caching
 RUN uv sync --locked --no-dev
 

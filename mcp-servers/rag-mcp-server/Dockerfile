@@ -1,9 +1,6 @@
 # Use a Python image with uv pre-installed
 FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim
 
-LABEL name="RAG"
-LABEL description="Query uploaded documents"
-
 # Install the project into `/app`
 WORKDIR /app
 

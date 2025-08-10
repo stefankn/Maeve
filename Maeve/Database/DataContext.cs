@@ -1,3 +1,4 @@
+using Maeve.Database.KeyValueStore;
 using Microsoft.EntityFrameworkCore;
 
 namespace Maeve.Database;
@@ -8,6 +9,7 @@ public class DataContext: DbContext {
 
     public DbSet<Conversation> Conversations { get; set; } = null!;
     public DbSet<Document> Documents { get; set; } = null!;
+    public DbSet<KeyValueEntry> KeyValueEntries { get; set; } = null!;
     
     
     // - Functions

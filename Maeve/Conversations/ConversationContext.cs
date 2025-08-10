@@ -1,9 +1,8 @@
 using Maeve.Database;
 using Maeve.Logging;
+using Maeve.ModelContextProtocol;
 using Microsoft.EntityFrameworkCore;
 using OllamaSharp;
-using OllamaSharp.ModelContextProtocol;
-using OllamaSharp.ModelContextProtocol.Server;
 using OllamaSharp.Models.Chat;
 using OllamaSharp.Tools;
 using ILogger = Maeve.Logging.ILogger;
@@ -19,7 +18,7 @@ public sealed class ConversationContext: IConversationContext {
 
     private readonly IDbContextFactory<DataContext> _dbContextFactory;
     private readonly ILogger _logger;
-    private readonly IWebHostEnvironment _environment;
+    private readonly IMcpConfigurator _mcpConfigurator;
 
     private readonly Chat _chat;
     private readonly List<Message> _messages = [];
@@ -49,11 +48,11 @@ public sealed class ConversationContext: IConversationContext {
         IOllamaApiClient ollamaApiClient,
         IDbContextFactory<DataContext> dbContextFactory,
         ILogger logger,
-        IWebHostEnvironment environment
+        IMcpConfigurator mcpConfigurator
         ) {
         _dbContextFactory = dbContextFactory;
         _logger = logger;
-        _environment = environment;
+        _mcpConfigurator = mcpConfigurator;
         
         var dataContext = dbContextFactory.CreateDbContext();
         var conversation = dataContext.Conversations
@@ -72,8 +71,6 @@ public sealed class ConversationContext: IConversationContext {
         // Construct history
         _messages.AddRange(conversation.Messages.OrderBy(m => m.CreatedAt));
         _chat.Messages.AddRange(_messages.Select(m => new OllamaMessage(new ChatRole(m.Role.Key()), m.Content)));
-        
-        _ = Task.Run(async () => await GetTools());
         
         var lastMessage = _messages.LastOrDefault();
         if (lastMessage?.Role != Role.User) return;
@@ -138,8 +135,7 @@ public sealed class ConversationContext: IConversationContext {
     // - Private Functions
 
     private async Task PerformSend(Message message) {
-        var tools = await GetTools();
-        var response = _chat.SendAsync(message.Content, tools);
+        var response = _chat.SendAsync(message.Content, _mcpConfigurator.AvailableTools);
         await AwaitTokens(response);
         
         if (Response != null) {
@@ -204,24 +200,6 @@ public sealed class ConversationContext: IConversationContext {
         }
 
         OnThoughts?.Invoke(this, Thoughts);
-    }
-    
-    private async Task<McpClientTool[]> GetTools() {
-        Console.WriteLine("Getting tools");
-        try {
-            var config = Path.Combine(_environment.ContentRootPath, "mcp_server_config.json");
-            var tools = await Tools.GetFromMcpServers(config);
-        
-            foreach (var tool in tools) {
-                _logger.Information($"Available tool: {tool.Function?.Name}, {tool.Function?.Description}", LogCategory.Tools, consoleLog: true);
-            }
-            
-            return tools;
-        } catch (Exception e) {
-            _logger.Error($"Error retrieving tools, {e}", LogCategory.Tools, consoleLog: true);
-        }
-
-        return [];
     }
     
     private void OnToolCall(object? toolCall, OllamaMessage.ToolCall call) {

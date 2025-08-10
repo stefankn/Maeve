@@ -8,12 +8,12 @@
 @using Microsoft.EntityFrameworkCore
 @using Message = Maeve.Database.Message
 @using Role = Maeve.Database.Role
+@using Blazor.Heroicons.Outline
 
 @inject IConversationManager ConversationManager
 @inject ILogger Logger
 @inject IJSRuntime JsRuntime
 @inject NavigationManager NavigationManager
-@inject IDbContextFactory<DataContext> DbContextFactory
 
 @implements IDisposable
 
@@ -23,9 +23,7 @@
     <div class="flex justify-end items-center">
         <div class="join">
             <button class="btn btn-sm btn-soft btn-error join-item" @onclick="Delete">
-                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="size-4">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="m14.74 9-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 0 1-2.244 2.077H8.084a2.25 2.25 0 0 1-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 0 0-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 0 1 3.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 0 0-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 0 0-7.5 0" />
-                </svg>
+                <TrashIcon class="size-4"></TrashIcon>
                 Delete conversation
             </button>
         </div>
@@ -55,10 +53,7 @@
                         @if (message.Thoughts != null) {
                             <div class="dropdown dropdown-hover dropdown-top dropdown-start">
                                 <div tabindex="0" role="button" class="btn btn-circle btn-xs m-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" fill="currentColor" class="size-4">
-                                        <path d="M7.702 1.368a.75.75 0 0 1 .597 0c2.098.91 4.105 1.99 6.004 3.223a.75.75 0 0 1-.194 1.348A34.27 34.27 0 0 0 8.341 8.25a.75.75 0 0 1-.682 0c-.625-.32-1.262-.62-1.909-.901v-.542a36.878 36.878 0 0 1 2.568-1.33.75.75 0 0 0-.636-1.357 38.39 38.39 0 0 0-3.06 1.605.75.75 0 0 0-.372.648v.365c-.773-.294-1.56-.56-2.359-.8a.75.75 0 0 1-.194-1.347 40.901 40.901 0 0 1 6.005-3.223ZM4.25 8.348c-.53-.212-1.067-.411-1.611-.596a40.973 40.973 0 0 0-.418 2.97.75.75 0 0 0 .474.776c.175.068.35.138.524.21a5.544 5.544 0 0 1-.58.681.75.75 0 1 0 1.06 1.06c.35-.349.655-.726.915-1.124a29.282 29.282 0 0 0-1.395-.617A5.483 5.483 0 0 0 4.25 8.5v-.152Z"/>
-                                        <path d="M7.603 13.96c-.96-.6-1.958-1.147-2.989-1.635a6.981 6.981 0 0 0 1.12-3.341c.419.192.834.393 1.244.602a2.25 2.25 0 0 0 2.045 0 32.787 32.787 0 0 1 4.338-1.834c.175.978.315 1.969.419 2.97a.75.75 0 0 1-.474.776 29.385 29.385 0 0 0-4.909 2.461.75.75 0 0 1-.794 0Z"/>
-                                    </svg>
+                                    <AcademicCapIcon class="size-4"></AcademicCapIcon>
 
                                 </div>
                                 <div
@@ -73,9 +68,7 @@
                         @if (message.Tools.Count > 0) {
                             <div class="dropdown dropdown-hover dropdown-top dropdown-start">
                                 <div tabindex="0" role="button" class="btn btn-circle btn-xs m-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" class="size-4">
-                                        <path fill-rule="evenodd" d="M19 5.5a4.5 4.5 0 0 1-4.791 4.49c-.873-.055-1.808.128-2.368.8l-6.024 7.23a2.724 2.724 0 1 1-3.837-3.837L9.21 8.16c.672-.56.855-1.495.8-2.368a4.5 4.5 0 0 1 5.873-4.575c.324.105.39.51.15.752L13.34 4.66a.455.455 0 0 0-.11.494 3.01 3.01 0 0 0 1.617 1.617c.17.07.363.02.493-.111l2.692-2.692c.241-.241.647-.174.752.15.14.435.216.9.216 1.382ZM4 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"/>
-                                    </svg>
+                                    <WrenchIcon class="size-4"></WrenchIcon>
                                 </div>
                                 <div
                                     tabindex="0"
@@ -124,9 +117,7 @@
             <div class="flex flex-col gap-2 pl-20">
                 <div role="alert" class="alert alert-info alert-soft flex items-start gap-2">
                     <div class="min-w-8 animate-pulse">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
-                        </svg>
+                        <ClockIcon class="size-8"></ClockIcon>
                     </div>
                     <div class="flex flex-col gap-1">
                         <div class="font-semibold">Thinking...</div>
@@ -137,10 +128,7 @@
                 @foreach (var tool in UsedTools) {
                     <div role="alert" class="alert alert-warning alert-soft flex items-center gap-2">
                         <div class="min-w-8 animate-pulse">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75a4.5 4.5 0 0 1-4.884 4.484c-1.076-.091-2.264.071-2.95.904l-7.152 8.684a2.548 2.548 0 1 1-3.586-3.586l8.684-7.152c.833-.686.995-1.874.904-2.95a4.5 4.5 0 0 1 6.336-4.486l-3.276 3.276a3.004 3.004 0 0 0 2.25 2.25l3.276-3.276c.256.565.398 1.192.398 1.852Z"/>
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M4.867 19.125h.008v.008h-.008v-.008Z"/>
-                            </svg>
+                            <WrenchIcon class="size-8"></WrenchIcon>
                         </div>
                         <div class="flex flex-col gap-1">
                             <div class="font-semibold">Tool call</div>
@@ -189,10 +177,10 @@
     
     // - Functions
 
-    protected override async Task OnParametersSetAsync() {
+    protected override void OnParametersSet() {
         if (!RendererInfo.IsInteractive) return;
 
-        await SetupConversation();
+        SetupConversation();
     }
     
     // IDisposable Functions
@@ -205,7 +193,7 @@
 
     // - Private Functions
     
-    private async Task SetupConversation() {
+    private void SetupConversation() {
         _isLoading = true;
         _isError = false;
 

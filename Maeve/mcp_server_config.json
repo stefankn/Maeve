@@ -1,6 +1,9 @@
 {
   "mcpServers": {
     "rag": {
+      "name": "RAG",
+      "description": "Query ingested documents.",
+      "icon": "document-magnifying-glass",
       "command": "docker-compose",
       "args": [
         "-f",
@@ -15,6 +18,9 @@
       ]
     },
     "finch": {
+      "name": "Finch music database",
+      "description": "Lookup playable albums, playlists and tracks.",
+      "icon": "musical-note",
       "command": "dotnet",
       "args": [
         "run",
@@ -23,7 +29,10 @@
       ]
     },
     "hue-mcp": {
+      "name": "Philips Hue",
+      "description": "Interface for controlling Philips Hue smart lightning systems.",
       "command": "docker-compose",
+      "icon": "light-bulb",
       "args": [
         "-f",
         "../docker-compose.dev.yaml",

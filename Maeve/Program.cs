@@ -1,8 +1,10 @@
 using Maeve.Components;
 using Maeve.Conversations;
 using Maeve.Database;
+using Maeve.Database.KeyValueStore;
 using Maeve.Documents;
 using Maeve.Logging;
+using Maeve.ModelContextProtocol;
 using Microsoft.AspNetCore.StaticFiles;
 using OllamaSharp;
 using StackExchange.Redis;
@@ -14,6 +16,7 @@ builder.Services.AddHttpClient();
 
 // Database
 builder.Services.AddDbContextFactory<DataContext>();
+builder.Services.AddSingleton<IKeyValueStore, KeyValueStore>();
 
 // Redis
 var connectionMultiplexer = ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_HOST") ?? "redis");
@@ -26,6 +29,9 @@ builder.Services.AddSingleton<ILogger>(provider => new Logger("Maeve", provider.
 // Documents
 builder.Services.AddTransient<IDocumentIngestClient, DocumentIngestClient>();
 builder.Services.AddSingleton<IDocumentProcessor, DocumentProcessor>();
+
+// MCP configuration
+builder.Services.AddSingleton<IMcpConfigurator, McpConfigurator>();
 
 // Ollama
 builder.Services.AddTransient<IOllamaApiClient>(_ => {
@@ -41,6 +47,10 @@ builder.Services
     .AddInteractiveServerComponents();
 
 var app = builder.Build();
+
+using var scope = app.Services.CreateScope();
+var configurator = scope.ServiceProvider.GetRequiredService<IMcpConfigurator>();
+configurator.GetAvailableServers();
 
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".log"] = "text/plain";

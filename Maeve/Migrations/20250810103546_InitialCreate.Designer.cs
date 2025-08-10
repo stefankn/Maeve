@@ -11,7 +11,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Maeve.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250727103028_InitialCreate")]
+    [Migration("20250810103546_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -71,6 +71,19 @@ namespace Maeve.Migrations
                         .IsUnique();
 
                     b.ToTable("documents");
+                });
+
+            modelBuilder.Entity("Maeve.Database.KeyValueStore.KeyValueEntry", b =>
+                {
+                    b.Property<string>("Key")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Value")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Key");
+
+                    b.ToTable("key_value_entries");
                 });
 
             modelBuilder.Entity("Maeve.Database.Message", b =>
