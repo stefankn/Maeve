@@ -1,4 +1,4 @@
-using OllamaSharp.ModelContextProtocol.Server;
+using ModelContextProtocol.Client;
 
 namespace Maeve.ModelContextProtocol;
 
@@ -13,7 +13,7 @@ public interface IMcpConfigurator {
     
     // - Functions
 
-    public void GetAvailableServers();
+    public void UpdateAvailableServers();
     public bool IsEnabled(ServerConfiguration server);
     public void ToggleServer(ServerConfiguration server, bool isEnabled);
 }

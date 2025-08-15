@@ -6,9 +6,9 @@ using Maeve.Documents;
 using Maeve.Logging;
 using Maeve.ModelContextProtocol;
 using Microsoft.AspNetCore.StaticFiles;
+using Microsoft.Extensions.AI;
 using OllamaSharp;
 using StackExchange.Redis;
-using ConversationContext = Maeve.Conversations.ConversationContext;
 using ILogger = Maeve.Logging.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -33,12 +33,20 @@ builder.Services.AddSingleton<IDocumentProcessor, DocumentProcessor>();
 // MCP configuration
 builder.Services.AddSingleton<IMcpConfigurator, McpConfigurator>();
 
-// Ollama
-builder.Services.AddTransient<IOllamaApiClient>(_ => {
-    var host = Environment.GetEnvironmentVariable("OLLAMA_HOST") ?? "host.docker.internal";
-    var port = Environment.GetEnvironmentVariable("OLLAMA_PORT") ?? "11434";
-    return new OllamaApiClient($"http://{host}:{port}", "gpt-oss:latest");
-});
+// AI client
+//using var factory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Trace));
+var host = Environment.GetEnvironmentVariable("OLLAMA_HOST") ?? "host.docker.internal";
+var port = Environment.GetEnvironmentVariable("OLLAMA_PORT") ?? "11434";
+var ollamaClient = new OllamaApiClient($"http://{host}:{port}", "qwen3:14b");
+var client = new ChatClientBuilder(ollamaClient)
+    //.UseLogging(factory)
+    .UseFunctionInvocation()
+    .Build();
+
+builder.Services
+    .AddDistributedMemoryCache()
+    .AddSingleton(client);
+
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
 
 // Blazor
@@ -50,7 +58,7 @@ var app = builder.Build();
 
 using var scope = app.Services.CreateScope();
 var configurator = scope.ServiceProvider.GetRequiredService<IMcpConfigurator>();
-configurator.GetAvailableServers();
+configurator.UpdateAvailableServers();
 
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".log"] = "text/plain";

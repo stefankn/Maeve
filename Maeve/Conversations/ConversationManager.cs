@@ -1,13 +1,13 @@
 using Maeve.Database;
 using Maeve.ModelContextProtocol;
 using Microsoft.EntityFrameworkCore;
-using OllamaSharp;
+using Microsoft.Extensions.AI;
 using ILogger = Maeve.Logging.ILogger;
 
 namespace Maeve.Conversations;
 
 public class ConversationManager(
-    IOllamaApiClient ollamaApiClient,
+    IChatClient chatClient,
     IDbContextFactory<DataContext> dbContextFactory,
     ILogger logger,
     IMcpConfigurator mcpConfigurator
@@ -40,7 +40,7 @@ public class ConversationManager(
             return conversation;
         }
 
-        var conversationContext = new ConversationContext(conversationId, ollamaApiClient, dbContextFactory, logger, mcpConfigurator);
+        var conversationContext = new ConversationContext(conversationId, chatClient, dbContextFactory, logger, mcpConfigurator);
         _conversationContexts[conversationId] = conversationContext;
 
         FocusedConversation = conversationContext;

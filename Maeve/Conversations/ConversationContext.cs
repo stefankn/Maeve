@@ -2,13 +2,11 @@ using Maeve.Database;
 using Maeve.Logging;
 using Maeve.ModelContextProtocol;
 using Microsoft.EntityFrameworkCore;
-using OllamaSharp;
-using OllamaSharp.Models.Chat;
-using OllamaSharp.Tools;
+using Microsoft.Extensions.AI;
 using ILogger = Maeve.Logging.ILogger;
 using Message = Maeve.Database.Message;
-using OllamaMessage = OllamaSharp.Models.Chat.Message;
 using Tool = Maeve.Database.Tool;
+using ChatRole = Microsoft.Extensions.AI.ChatRole;
 
 namespace Maeve.Conversations;
 
@@ -19,8 +17,9 @@ public sealed class ConversationContext: IConversationContext {
     private readonly IDbContextFactory<DataContext> _dbContextFactory;
     private readonly ILogger _logger;
     private readonly IMcpConfigurator _mcpConfigurator;
+    private bool _isThinking;
 
-    private readonly Chat _chat;
+    private readonly IChatClient _chatClient;
     private readonly List<Message> _messages = [];
     private readonly List<Tool> _usedTools = [];
     
@@ -45,7 +44,7 @@ public sealed class ConversationContext: IConversationContext {
 
     public ConversationContext(
         string conversationId,
-        IOllamaApiClient ollamaApiClient,
+        IChatClient chatClient,
         IDbContextFactory<DataContext> dbContextFactory,
         ILogger logger,
         IMcpConfigurator mcpConfigurator
@@ -63,20 +62,16 @@ public sealed class ConversationContext: IConversationContext {
         Id = conversationId;
         Title = conversation.Title;
 
-        _chat = new Chat(ollamaApiClient) { Think = true };
-        _chat.OnThink += OnThink;
-        _chat.OnToolCall += OnToolCall;
-        _chat.OnToolResult += OnToolResult;
+        _chatClient = chatClient;
         
         // Construct history
         _messages.AddRange(conversation.Messages.OrderBy(m => m.CreatedAt));
-        _chat.Messages.AddRange(_messages.Select(m => new OllamaMessage(new ChatRole(m.Role.Key()), m.Content)));
         
         var lastMessage = _messages.LastOrDefault();
-        if (lastMessage?.Role != Role.User) return;
-        
-        IsResponding = true;
-        _ = Task.Run(async () => await PerformSend(lastMessage));
+        if (lastMessage != null && lastMessage.Role == Role.User) {
+            IsResponding = true;
+            _ = Task.Run(async () => await PerformSend());
+        }
     }
     
     
@@ -94,7 +89,6 @@ public sealed class ConversationContext: IConversationContext {
                 Role = Role.System
             };
             _messages.Add(systemMessage);
-            _chat.Messages.Add(new OllamaMessage(new ChatRole(systemMessage.Role.Key()), systemMessage.Content));
             messagesToStore.Add(systemMessage);
             
             _logger.Information($"Adding system message: {systemMessage.Content}", LogCategory.Llm, true);
@@ -123,7 +117,7 @@ public sealed class ConversationContext: IConversationContext {
             OnNewMessage?.Invoke(this, message);
             IsResponding = true;
             
-            await PerformSend(message);
+            await PerformSend();
         } catch (Exception e) {
             _logger.Error("Failed to send message", LogCategory.Llm, consoleLog: true);
             _logger.Error(e.ToString(), LogCategory.Llm);
@@ -133,11 +127,21 @@ public sealed class ConversationContext: IConversationContext {
     
     
     // - Private Functions
+    
+    private async Task PerformSend() {
+        var messages = _messages.Select(m => new ChatMessage(new ChatRole(m.Role.Key()), m.Content));
+        var tools = _mcpConfigurator.AvailableTools.ToList();
 
-    private async Task PerformSend(Message message) {
-        var response = _chat.SendAsync(message.Content, _mcpConfigurator.AvailableTools);
-        await AwaitTokens(response);
-        
+        var options = new ChatOptions {
+            Tools = [..tools],
+            ToolMode = ChatToolMode.Auto,
+            AllowMultipleToolCalls = true
+        };
+
+        await foreach (var update in _chatClient.GetStreamingResponseAsync(messages, options)) {
+            HandleUpdate(update);
+        }
+
         if (Response != null) {
             try {
                 await using var dataContext = await _dbContextFactory.CreateDbContextAsync();
@@ -145,7 +149,7 @@ public sealed class ConversationContext: IConversationContext {
                     .Include(c => c.Messages)
                     .FirstOrDefaultAsync(c => c.Id == Id);
                 if (conversation == null) return;
-
+        
                 var assistantMessage = new Message {
                     Role = Role.Assistant,
                     Content = Response,
@@ -166,59 +170,75 @@ public sealed class ConversationContext: IConversationContext {
                 conversation.UpdatedAt = DateTime.Now;
                 await dataContext.SaveChangesAsync();
             } catch (Exception e) {
-                Console.WriteLine(e);
+                _logger.Error("Failed to save response", LogCategory.Llm, consoleLog: true);
+                _logger.Error($"Error saving response, {e}", LogCategory.Llm);
             }
         }
-        
+
         OnResponse?.Invoke(this, Response);
     }
     
-    private async Task AwaitTokens(IAsyncEnumerable<string> response) {
-        await foreach (var token in response) {
-            if (token.Trim() == "") continue;
-            
-            if (Response == null) {
-                Response = token;
-            } else {
-                Response += token;
+    private void HandleUpdate(ChatResponseUpdate update) {
+        foreach (var content in update.Contents) {
+            switch (content) {
+                case TextReasoningContent reasoningContent:
+                    if (Thoughts == null) {
+                        Thoughts = reasoningContent.Text;
+                    } else {
+                        Thoughts += reasoningContent.Text;
+                    }
+                        
+                    OnThoughts?.Invoke(this, Thoughts);
+                    break;
+                case TextContent textContent:
+                    // In case the model doesn't use reasoning functionality but the reasoning is
+                    // done in the general response
+                    switch (textContent.Text) {
+                        case "<think>":
+                            _isThinking = true;
+                            continue;
+                        case "</think>":
+                            _isThinking = false;
+                            continue;
+                    }
+
+                    if (_isThinking) {
+                        if (Thoughts == null) {
+                            Thoughts = textContent.Text;
+                        } else {
+                            Thoughts += textContent.Text;
+                        }
+                        
+                        OnThoughts?.Invoke(this, Thoughts);
+                    } else {
+                        if (Response == null) {
+                            if (textContent.Text.Trim() == "") {
+                                continue;
+                            }
+                            Response = textContent.Text;
+                        } else {
+                            Response += textContent.Text;
+                        }
+                        
+                        OnResponse?.Invoke(this, Response);
+                    }
+                    
+                    break;
+                case FunctionCallContent functionCall:
+                    var arguments = functionCall.Arguments.Select(a => new Tool.Argument {
+                        Key = a.Key, Value = a.Value?.ToString()
+                    }).ToList();
+
+                    var tool = new Tool {
+                        Function = functionCall.Name,
+                        Arguments = arguments
+                    };
+                    _logger.Information($"Tool call - {tool.Description}", LogCategory.Tools, consoleLog: true);
+                    _usedTools.Add(tool);
+                    
+                    OnToolInvocation?.Invoke(this, tool);
+                    break;
             }
-
-            if (Response.Trim() != "") {
-                OnToolInvocation?.Invoke(this, null);
-                OnThoughts?.Invoke(this, null);
-            }
- 
-            OnResponse?.Invoke(this, Response);
         }
-    }
-    
-    private void OnThink(object? sender, string e) {
-        if (Thoughts == null) {
-            Thoughts = e;
-        } else {
-            Thoughts += e;
-        }
-
-        OnThoughts?.Invoke(this, Thoughts);
-    }
-    
-    private void OnToolCall(object? toolCall, OllamaMessage.ToolCall call) {
-        if (call.Function?.Name == null) return;
-
-        var arguments = call.Function.Arguments?
-            .Select(arg => new Tool.Argument { Key = arg.Key, Value = arg.Value?.ToString() })
-            .ToList();
-        
-        var tool = new Tool {
-            Function = call.Function.Name,
-            Arguments = arguments ?? []
-        };
-        _logger.Information($"Tool call - {tool.Description}", LogCategory.Tools, consoleLog: true);
-        
-        _usedTools.Add(tool);
-        OnToolInvocation?.Invoke(this, tool);
-    }
-    
-    private void OnToolResult(object? sender, ToolResult e) {
     }
 }

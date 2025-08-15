@@ -1,8 +1,7 @@
 using System.Text.Json;
 using Maeve.Database.KeyValueStore;
 using Maeve.Logging;
-using OllamaSharp.ModelContextProtocol;
-using OllamaSharp.ModelContextProtocol.Server;
+using ModelContextProtocol.Client;
 using ILogger = Maeve.Logging.ILogger;
 
 namespace Maeve.ModelContextProtocol;
@@ -22,7 +21,7 @@ public class McpConfigurator(
 
     // - Functions
     
-    public void GetAvailableServers() {
+    public void UpdateAvailableServers() {
         var path = Path.Combine(environment.ContentRootPath, "mcp_server_config.json");
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
 
@@ -39,10 +38,6 @@ public class McpConfigurator(
             server.Key = pair.Key;
             return server;
         }).ToArray();
-        
-        foreach (var serverConfiguration in configuration.Values) {
-            Console.WriteLine($"Found configuration for {serverConfiguration.Name}");
-        }
 
         UpdateEnabledServers();
     }
@@ -68,14 +63,22 @@ public class McpConfigurator(
     }
 
     private async Task UpdateAvailableTools() {
-        AvailableTools = await Tools.GetFromMcpServers(EnabledServers.Select(s => new McpServerConfiguration {
-            Name = s.Key,
-            Command = s.Command,
-            Arguments = s.Args
-        }).ToArray());
+        var availableTools = new List<McpClientTool>();
+        foreach (var serverConfiguration in EnabledServers) {
+            var transportOptions = new StdioClientTransportOptions {
+                Name = serverConfiguration.Name,
+                Command = serverConfiguration.Command,
+                Arguments = serverConfiguration.Args
+            };
+            
+            var client = await McpClientFactory.CreateAsync(new StdioClientTransport(transportOptions));
+            availableTools.AddRange(await client.ListToolsAsync());
+        }
+        
+        AvailableTools = availableTools.ToArray();
         
         foreach (var tool in AvailableTools) {
-            logger.Information($"Available tool: {tool.Function?.Name}, {tool.Function?.Description}", LogCategory.Tools, consoleLog: true);
+            logger.Information($"Available tool: {tool.Name}, {tool.Description}", LogCategory.Tools, consoleLog: true);
         }
     }
 }
