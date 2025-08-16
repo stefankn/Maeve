@@ -1,5 +1,6 @@
 using Maeve.Database;
 using Maeve.ModelContextProtocol;
+using Maeve.ModelProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using ILogger = Maeve.Logging.ILogger;
@@ -10,7 +11,8 @@ public class ConversationManager(
     IChatClient chatClient,
     IDbContextFactory<DataContext> dbContextFactory,
     ILogger logger,
-    IMcpConfigurator mcpConfigurator
+    IMcpConfigurator mcpConfigurator,
+    IModelProvider modelProvider
     ): IConversationManager {
     
     // - Private Properties
@@ -40,7 +42,7 @@ public class ConversationManager(
             return conversation;
         }
 
-        var conversationContext = new ConversationContext(conversationId, chatClient, dbContextFactory, logger, mcpConfigurator);
+        var conversationContext = new ConversationContext(conversationId, chatClient, dbContextFactory, logger, mcpConfigurator, modelProvider);
         _conversationContexts[conversationId] = conversationContext;
 
         FocusedConversation = conversationContext;

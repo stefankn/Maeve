@@ -12,4 +12,6 @@ public interface IKeyValueStore {
     public bool GetBool(string key);
     public Task SetBoolAsync(bool? value, string key);
     public void SetBool(bool? value, string key);
+    public int? GetInt(string key);
+    public void SetInt(int? value, string key);
 }

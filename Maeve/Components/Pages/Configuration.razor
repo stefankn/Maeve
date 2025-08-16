@@ -1,0 +1,32 @@
+@page "/configuration"
+
+@using Maeve.ModelProviders
+
+@inject IModelProvider ModelProvider
+
+<PageTitle>Maeve :: Configuration</PageTitle>
+
+<div class="text-xl font-semibold">Configuration</div>
+
+<div class="flex flex-col">
+    <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+        <legend class="fieldset-legend">@ModelProvider.Name</legend>
+        
+        <label class="label">Default model used for new conversations</label>
+        <InputSelect @bind-Value="SelectedModel" class="select">
+            @foreach (var model in ModelProvider.AvailableModels) {
+                <option value="@model.Id">@model.Name</option>
+            }
+        </InputSelect>
+    </fieldset>
+</div>
+
+@code {
+    
+    // - Private Properties
+
+    private string? SelectedModel {
+        get => ModelProvider.DefaultModelId;
+        set => ModelProvider.DefaultModelId = value;
+    }
+}

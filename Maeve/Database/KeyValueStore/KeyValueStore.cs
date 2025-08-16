@@ -65,6 +65,15 @@ public class KeyValueStore(IDbContextFactory<DataContext> dbContextFactory): IKe
     public void SetBool(bool? value, string key) {
         SetString(value?.ToString(), key);
     }
+
+    public int? GetInt(string key) {
+        var isValid =  int.TryParse(GetString(key), out var value);
+        return isValid ? value : null;
+    }
+
+    public void SetInt(int? value, string key) {
+        SetString(value?.ToString(), key);
+    }
     
     
     // - Private Functions

@@ -1,6 +1,7 @@
 using Maeve.Database;
 using Maeve.Logging;
 using Maeve.ModelContextProtocol;
+using Maeve.ModelProviders;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.AI;
 using ILogger = Maeve.Logging.ILogger;
@@ -17,6 +18,7 @@ public sealed class ConversationContext: IConversationContext {
     private readonly IDbContextFactory<DataContext> _dbContextFactory;
     private readonly ILogger _logger;
     private readonly IMcpConfigurator _mcpConfigurator;
+    private readonly IModelProvider _modelProvider;
     private bool _isThinking;
 
     private readonly IChatClient _chatClient;
@@ -47,11 +49,13 @@ public sealed class ConversationContext: IConversationContext {
         IChatClient chatClient,
         IDbContextFactory<DataContext> dbContextFactory,
         ILogger logger,
-        IMcpConfigurator mcpConfigurator
+        IMcpConfigurator mcpConfigurator,
+        IModelProvider modelProvider
         ) {
         _dbContextFactory = dbContextFactory;
         _logger = logger;
         _mcpConfigurator = mcpConfigurator;
+        _modelProvider = modelProvider;
         
         var dataContext = dbContextFactory.CreateDbContext();
         var conversation = dataContext.Conversations
@@ -135,7 +139,9 @@ public sealed class ConversationContext: IConversationContext {
         var options = new ChatOptions {
             Tools = [..tools],
             ToolMode = ChatToolMode.Auto,
-            AllowMultipleToolCalls = true
+            AllowMultipleToolCalls = true,
+            ModelId = _modelProvider.DefaultModelId,
+            MaxOutputTokens = _modelProvider.MaxOutputTokens
         };
 
         await foreach (var update in _chatClient.GetStreamingResponseAsync(messages, options)) {
@@ -225,13 +231,13 @@ public sealed class ConversationContext: IConversationContext {
                     
                     break;
                 case FunctionCallContent functionCall:
-                    var arguments = functionCall.Arguments.Select(a => new Tool.Argument {
+                    var arguments = functionCall.Arguments?.Select(a => new Tool.Argument {
                         Key = a.Key, Value = a.Value?.ToString()
                     }).ToList();
 
                     var tool = new Tool {
                         Function = functionCall.Name,
-                        Arguments = arguments
+                        Arguments = arguments ?? []
                     };
                     _logger.Information($"Tool call - {tool.Description}", LogCategory.Tools, consoleLog: true);
                     _usedTools.Add(tool);

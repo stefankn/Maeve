@@ -3,11 +3,11 @@ using Maeve.Conversations;
 using Maeve.Database;
 using Maeve.Database.KeyValueStore;
 using Maeve.Documents;
+using Maeve.Extensions;
 using Maeve.Logging;
 using Maeve.ModelContextProtocol;
+using Maeve.ModelProviders;
 using Microsoft.AspNetCore.StaticFiles;
-using Microsoft.Extensions.AI;
-using OllamaSharp;
 using StackExchange.Redis;
 using ILogger = Maeve.Logging.ILogger;
 
@@ -34,18 +34,7 @@ builder.Services.AddSingleton<IDocumentProcessor, DocumentProcessor>();
 builder.Services.AddSingleton<IMcpConfigurator, McpConfigurator>();
 
 // AI client
-//using var factory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Trace));
-var host = Environment.GetEnvironmentVariable("OLLAMA_HOST") ?? "host.docker.internal";
-var port = Environment.GetEnvironmentVariable("OLLAMA_PORT") ?? "11434";
-var ollamaClient = new OllamaApiClient($"http://{host}:{port}", "qwen3:14b");
-var client = new ChatClientBuilder(ollamaClient)
-    //.UseLogging(factory)
-    .UseFunctionInvocation()
-    .Build();
-
-builder.Services
-    .AddDistributedMemoryCache()
-    .AddSingleton(client);
+builder.Services.ConfigureAiClient(builder.Configuration);
 
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
 
@@ -59,6 +48,9 @@ var app = builder.Build();
 using var scope = app.Services.CreateScope();
 var configurator = scope.ServiceProvider.GetRequiredService<IMcpConfigurator>();
 configurator.UpdateAvailableServers();
+
+var modelProvider = scope.ServiceProvider.GetRequiredService<IModelProvider>();
+await modelProvider.GetModelsAsync();
 
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".log"] = "text/plain";
