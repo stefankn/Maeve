@@ -1,6 +1,10 @@
 ﻿@inherits LayoutComponentBase
 
 @using Blazor.Heroicons.Solid
+@using Maeve.Extensions
+@using Maeve.ModelProviders
+
+@inject IModelProvider ModelProvider
 
 <div class="flex px-10">
     <aside class="h-screen sticky top-0">
@@ -52,7 +56,41 @@
         </div>
     </aside>
     
-    <main class="px-50 pt-50 w-full">
-        @Body
+    <main class="px-50 w-full flex flex-col gap-10">
+        <div class="min-h-48 pt-20">
+            @if (_errorMessage != null) {
+                <div role="alert" class="alert alert-error alert-soft min-w-2/3">
+                    <FaceFrownIcon class="size-10"></FaceFrownIcon>
+                    <div>
+                        <h3 class="font-bold">There was a problem</h3>
+                        <span>@_errorMessage</span>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <div>
+            @Body
+        </div>
+
     </main>
+    
 </div>
+
+@code {
+    
+    // - Private Properties
+
+    private string? _errorMessage;
+    
+    
+    // - Functions
+
+    protected override void OnInitialized() {
+        if (!RendererInfo.IsInteractive) return;
+
+        if (ModelProvider.HasConfigurationError) {
+            _errorMessage = $"Failed to setup configuration for {ModelProvider.Provider.GetDescriptionAttribute()}, please verify the configuration or configure another provider.";
+        }
+    }
+}

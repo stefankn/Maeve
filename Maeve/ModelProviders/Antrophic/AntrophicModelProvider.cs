@@ -1,5 +1,6 @@
 using Anthropic.SDK;
 using Maeve.Database.KeyValueStore;
+using Maeve.Extensions;
 
 namespace Maeve.ModelProviders.Antrophic;
 
@@ -9,12 +10,13 @@ public class AntrophicModelProvider(AnthropicClient client, IKeyValueStore keyVa
     
     // IModelProvider Properties
 
-    public string Name => "Antrophic";
+    public Provider Provider => Provider.Antrophic;
     public Model[] AvailableModels { get; private set; } = [];
+    public bool HasConfigurationError => AvailableModels.Length == 0;
 
     public string? DefaultModelId {
-        get => keyValueStore.GetString($"{Name}-defaultModel") ?? AvailableModels.FirstOrDefault()?.Id;
-        set => keyValueStore.SetString(value, $"{Name}-defaultModel");
+        get => keyValueStore.GetString($"{Provider.GetDescriptionAttribute()}-defaultModel") ?? AvailableModels.FirstOrDefault()?.Id;
+        set => keyValueStore.SetString(value, $"{Provider.GetDescriptionAttribute()}-defaultModel");
     }
 
     public int? MaxOutputTokens => 1000;

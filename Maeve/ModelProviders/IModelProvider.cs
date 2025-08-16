@@ -4,10 +4,11 @@ public interface IModelProvider {
     
     // - Properties
     
-    public string Name { get; }
+    public Provider Provider { get; }
     public Model[] AvailableModels { get; }
     public string? DefaultModelId { get; set; }
     public int? MaxOutputTokens { get; }
+    public bool HasConfigurationError { get; }
     
     
     // - Functions

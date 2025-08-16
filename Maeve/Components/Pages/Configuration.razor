@@ -1,5 +1,6 @@
 @page "/configuration"
 
+@using Maeve.Extensions
 @using Maeve.ModelProviders
 
 @inject IModelProvider ModelProvider
@@ -10,7 +11,7 @@
 
 <div class="flex flex-col">
     <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
-        <legend class="fieldset-legend">@ModelProvider.Name</legend>
+        <legend class="fieldset-legend">@ModelProvider.Provider.GetDescriptionAttribute()</legend>
         
         <label class="label">Default model used for new conversations</label>
         <InputSelect @bind-Value="SelectedModel" class="select">
