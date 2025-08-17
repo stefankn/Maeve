@@ -19,7 +19,7 @@ public class AntrophicModelProvider(AnthropicClient client, IKeyValueStore keyVa
         set => keyValueStore.SetString(value, $"{Provider.GetDescriptionAttribute()}-defaultModel");
     }
 
-    public int? MaxOutputTokens => 1000;
+    public int? MaxOutputTokens => 8192;
 
 
     // - Functions
