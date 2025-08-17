@@ -7,9 +7,9 @@ public interface IConversationManager {
     // - Properties
     
     public Conversation[] Conversations { get; }
-    public IConversationContext[] ActiveConversations { get; }
     public IConversationContext? FocusedConversation { get; }
     public event EventHandler<IConversationContext?>? OnConversationFocus;
+    public event EventHandler? OnConversationUpdate;
     
     
     // - Functions

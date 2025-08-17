@@ -25,12 +25,13 @@ public class ConversationManager(
     public Conversation[] Conversations {
         get {
             using var dataContext = dbContextFactory.CreateDbContext();
-            return dataContext.Conversations.Where(c => !ActiveConversations.Select(ac => ac.Id).Contains(c.Id)).ToArray();
+            return dataContext.Conversations.OrderByDescending(c => c.UpdatedAt).ToArray();
         }
     }
-    public IConversationContext[] ActiveConversations => _conversationContexts.Values.ToArray();
     public IConversationContext? FocusedConversation { get; private set; }
+    
     public event EventHandler<IConversationContext?>? OnConversationFocus;
+    public event EventHandler? OnConversationUpdate;
 
 
     // - Functions
@@ -43,12 +44,17 @@ public class ConversationManager(
         }
 
         var conversationContext = new ConversationContext(conversationId, chatClient, dbContextFactory, logger, mcpConfigurator, modelProvider);
+        conversationContext.OnNewMessage += OnNewConversationMessage;
         _conversationContexts[conversationId] = conversationContext;
 
         FocusedConversation = conversationContext;
         OnConversationFocus?.Invoke(this, conversationContext);
 
         return conversationContext;
+    }
+
+    private void OnNewConversationMessage(object? sender, Message e) {
+        OnConversationUpdate?.Invoke(this, EventArgs.Empty);
     }
 
     public void LeaveConversation(IConversationContext conversationContext) {
@@ -61,6 +67,7 @@ public class ConversationManager(
     public async Task Delete(IConversationContext conversationContext) {
         if (conversationContext.Id == null) return;
         
+        conversationContext.OnNewMessage -= OnNewConversationMessage;
         _conversationContexts.Remove(conversationContext.Id);
         
         await using var dataContext = await dbContextFactory.CreateDbContextAsync();

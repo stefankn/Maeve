@@ -5,11 +5,7 @@
 
 <ul class="menu bg-base-100 w-full">
     <li class="menu-title">Conversations</li>
-    @if (ConversationManager.ActiveConversations.Length > 0 || ConversationManager.Conversations.Length > 0) {
-        @foreach (var conversation in ConversationManager.ActiveConversations) {
-            <ConversationMenuItem Conversation="conversation"></ConversationMenuItem>
-        }
-
+    @if (ConversationManager.Conversations.Length > 0) {
         @foreach (var conversation in ConversationManager.Conversations) {
             <li>
                 <a class="@(conversation.Id == ConversationManager.FocusedConversation?.Id ? "menu-active" : "")" href="/conversations/@conversation.Id">
@@ -37,5 +33,6 @@
 
     protected override void OnInitialized() {
         ConversationManager.OnConversationFocus += (_, _) => InvokeAsync(StateHasChanged);
+        ConversationManager.OnConversationUpdate += (_, _) => InvokeAsync(StateHasChanged);
     }
 }

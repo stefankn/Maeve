@@ -9,12 +9,6 @@
     // - Functions
 
     protected override void OnInitialized() {
-        var conversationContext = ConversationManager.ActiveConversations.FirstOrDefault();
-        if (conversationContext != null) {
-            NavigationManager.NavigateTo($"/conversations/{conversationContext.Id}");
-            return;
-        }
-        
         var conversation = ConversationManager.Conversations.FirstOrDefault();
         if (conversation != null) {
             NavigationManager.NavigateTo($"/conversations/{conversation.Id}");
