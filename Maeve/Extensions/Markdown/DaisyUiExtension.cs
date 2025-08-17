@@ -63,5 +63,9 @@ public class DaisyUiExtension: IMarkdownExtension {
         foreach (var list in document.Descendants<ListBlock>()) {
             list.GetAttributes().AddClass("my-4");
         }
+
+        foreach (var table in document.Descendants<Table>()) {
+            table.GetAttributes().AddClass("my-4");
+        }
     }
 }
