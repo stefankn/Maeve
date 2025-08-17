@@ -21,13 +21,6 @@ public class DaisyUiExtension: IMarkdownExtension {
     }
 
     public void Setup(MarkdownPipeline pipeline, IMarkdownRenderer renderer) {
-        if (renderer is not HtmlRenderer htmlRenderer) return;
-        
-        var existingRenderer = htmlRenderer.ObjectRenderers.FindExact<CodeBlockRenderer>();
-        if (existingRenderer == null) return;
-            
-        htmlRenderer.ObjectRenderers.Remove(existingRenderer);
-        htmlRenderer.ObjectRenderers.AddIfNotAlready<DaisyUiCodeBlockRenderer>();
     }
     
     

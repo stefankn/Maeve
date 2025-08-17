@@ -179,10 +179,11 @@
     
     // - Functions
 
-    protected override void OnParametersSet() {
+    protected override async Task OnParametersSetAsync() {
         if (!RendererInfo.IsInteractive) return;
 
         SetupConversation();
+        await HighlightCodeBlocks();
     }
     
     // IDisposable Functions
@@ -230,6 +231,7 @@
     
     private void OnNewMessage(object? sender, Message message) {
         InvokeAsync(StateHasChanged);
+        Task.Run(async () => await HighlightCodeBlocks());
         Task.Run(async () => await ScrollToBottom());
     }
     
@@ -259,6 +261,10 @@
     
     private async Task ScrollToBottom() {
         await JsRuntime.InvokeVoidAsync("maeve.scrollToBottom");
+    }
+
+    private async Task HighlightCodeBlocks() {
+        await JsRuntime.InvokeVoidAsync("maeve.highlightCodeBlocks");
     }
 
     private async Task Delete() {
