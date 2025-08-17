@@ -1,8 +1,10 @@
 @using Maeve.Database
 @using Microsoft.EntityFrameworkCore
 @using Blazor.Heroicons.Solid
+@using Maeve.ModelProviders
 
 @inject IDbContextFactory<DataContext> DbContextFactory
+@inject IModelProvider ModelProvider
 
 <div class="flex flex-col gap-2 w-full">
     @if (_documents.Length > 0) {
@@ -48,7 +50,7 @@
         </div>
     }
     
-    <textarea @bind="_query" class="textarea w-full bg-base-100" @bind:event="oninput" @onkeydown="OnKeyDown"></textarea>
+    <textarea @bind="_query" class="textarea w-full bg-base-100" @bind:event="oninput" @onkeydown="OnKeyDown" disabled="@ModelProvider.HasConfigurationError"></textarea>
 </div>
 
 @code {
