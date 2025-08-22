@@ -219,6 +219,8 @@
         } catch (Exception e) {
             _isLoading = false;
             _isError = true;
+            Logger.Error("Failed to setup conversation", LogCategory.Web, true);
+            Logger.Error($"Failed to setup conversation, {e}", LogCategory.Web);
         }
     }
 

@@ -46,27 +46,27 @@ public sealed class ConversationContext: IConversationContext {
 
     public ConversationContext(
         string conversationId,
-        IChatClient chatClient,
+        IChatClientFactory chatClientFactory,
         IDbContextFactory<DataContext> dbContextFactory,
         ILogger logger,
         IMcpConfigurator mcpConfigurator,
-        IModelProvider modelProvider
+        IModelProviderFactory modelProviderFactory
         ) {
         _dbContextFactory = dbContextFactory;
         _logger = logger;
         _mcpConfigurator = mcpConfigurator;
-        _modelProvider = modelProvider;
         
         var dataContext = dbContextFactory.CreateDbContext();
         var conversation = dataContext.Conversations
             .Include(c => c.Messages)
             .FirstOrDefault(c => c.Id == conversationId);
         if (conversation == null) throw new Exception("Conversation not found");
+
+        _modelProvider = modelProviderFactory.CreateModelProvider(conversation.Provider);
+        _chatClient = chatClientFactory.CreateChatClient(conversation.Provider);
         
         Id = conversationId;
         Title = conversation.Title;
-
-        _chatClient = chatClient;
         
         // Construct history
         _messages.AddRange(conversation.Messages.OrderBy(m => m.CreatedAt));

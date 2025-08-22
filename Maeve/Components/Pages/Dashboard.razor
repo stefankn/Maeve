@@ -1,10 +1,12 @@
 @page "/"
 @using Maeve.Database
 @using Maeve.Extensions
+@using Maeve.ModelProviders
 @using Microsoft.EntityFrameworkCore
 
 @inject IDbContextFactory<DataContext> DbContextFactory
 @inject NavigationManager NavigationManager
+@inject IModelProviderFactory ModelProviderFactory
 
 <div class="flex flex-col gap-6 w-full">
     <div>Dashboard</div>
@@ -24,11 +26,15 @@
     }
 
     private async Task CreateNewConversation(string query, Document? document) {
+        var defaultModelProvider = ModelProviderFactory.CreateDefaultModelProvider();
+        if (defaultModelProvider == null) return;
+        
         await using var dataContext = await DbContextFactory.CreateDbContextAsync();
         var title = query.Truncate(50);
         
         var conversation = new Database.Conversation {
             Title = title,
+            Provider = defaultModelProvider.Provider,
             CreatedAt = DateTime.Now,
             UpdatedAt = DateTime.Now
         };

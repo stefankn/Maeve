@@ -6,5 +6,5 @@ public interface IChatClientFactory {
     
     // - Functions
     
-    public IChatClient? CreateChatClient(Provider? provider = null);
+    public IChatClient CreateChatClient(Provider provider);
 }

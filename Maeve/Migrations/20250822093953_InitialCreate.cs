@@ -18,7 +18,8 @@ namespace Maeve.Migrations
                     Id = table.Column<string>(type: "TEXT", nullable: false),
                     Title = table.Column<string>(type: "TEXT", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false)
+                    UpdatedAt = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Provider = table.Column<int>(type: "INTEGER", nullable: false)
                 },
                 constraints: table =>
                 {

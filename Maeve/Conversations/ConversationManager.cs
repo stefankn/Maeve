@@ -41,14 +41,8 @@ public class ConversationManager(
             OnConversationFocus?.Invoke(this, conversation);
             return conversation;
         }
-
-        var chatClient = chatClientFactory.CreateChatClient();
-        var modelProvider = modelProviderFactory.CreateDefaultModelProvider();
-        if (chatClient == null) {
-            throw new Exception("Default LLM provider not configured");
-        }
-
-        var conversationContext = new ConversationContext(conversationId, chatClient, dbContextFactory, logger, mcpConfigurator, modelProvider);
+        
+        var conversationContext = new ConversationContext(conversationId, chatClientFactory, dbContextFactory, logger, mcpConfigurator, modelProviderFactory);
         conversationContext.OnNewMessage += OnNewConversationMessage;
         _conversationContexts[conversationId] = conversationContext;
 
