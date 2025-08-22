@@ -35,6 +35,7 @@ public sealed class ConversationContext: IConversationContext {
 
     public string Id { get; }
     public string Title { get; }
+    public IModelProvider ModelProvider => _modelProvider;
     public bool IsResponding { get; private set; }
     public Message[] Messages => _messages.Where(m => m.Role != Role.System).ToArray();
     public string? Thoughts { get; private set; }

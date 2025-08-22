@@ -18,15 +18,27 @@
 
 <PageTitle>Maeve</PageTitle>
 
-<div class="flex flex-col gap-6 mb-56 w-full">
-    <div class="flex justify-end items-center">
-        <div class="join">
+<div class="sticky top-0 bg-base-100 w-full pt-4 flex flex-col z-50">
+    <div class="flex justify-between items-center">
+        @if (_conversationContext != null) {
+            <div class="flex flex-col gap-1">
+                <div class="font-semibold text-primary-content text-xl">
+                    @_conversationContext.Title
+                </div>
+                <div class="text-sm text-secondary-content">
+                    @_conversationContext.ModelProvider.Provider
+                </div>
+            </div>
             <button class="btn btn-sm btn-soft btn-error join-item" @onclick="Delete">
                 <TrashIcon class="size-4"></TrashIcon>
-                Delete conversation
             </button>
-        </div>
+        }
     </div>
+   
+    <div class="divider"></div>
+</div>
+
+<div class="flex flex-col gap-6 mb-56 w-full">
     <div class="flex flex-col gap-6">
         @if (_isError) {
             <div class="w-full flex justify-center mt-20">

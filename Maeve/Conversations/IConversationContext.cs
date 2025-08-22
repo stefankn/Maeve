@@ -1,4 +1,5 @@
 using Maeve.Database;
+using Maeve.ModelProviders;
 
 namespace Maeve.Conversations;
 
@@ -15,6 +16,7 @@ public interface IConversationContext {
     
     public string? Id { get; }
     public string Title { get; }
+    public IModelProvider ModelProvider { get; }
     public bool IsResponding { get; }
     public Message[] Messages { get; }
     public string? Response { get; }
