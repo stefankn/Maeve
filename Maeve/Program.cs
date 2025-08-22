@@ -35,7 +35,6 @@ builder.Services.AddSingleton<IMcpConfigurator, McpConfigurator>();
 
 // AI client
 builder.Services.ConfigureAiClient(builder.Configuration);
-
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
 
 // Blazor
@@ -48,9 +47,6 @@ var app = builder.Build();
 using var scope = app.Services.CreateScope();
 var configurator = scope.ServiceProvider.GetRequiredService<IMcpConfigurator>();
 configurator.UpdateAvailableServers();
-
-var modelProvider = scope.ServiceProvider.GetRequiredService<IModelProvider>();
-await modelProvider.GetModelsAsync();
 
 var provider = new FileExtensionContentTypeProvider();
 provider.Mappings[".log"] = "text/plain";

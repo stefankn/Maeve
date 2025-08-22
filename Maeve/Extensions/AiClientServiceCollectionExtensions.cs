@@ -13,13 +13,12 @@ public static class AiClientServiceCollectionExtensions {
     // - Functions
 
     public static IServiceCollection ConfigureAiClient(this IServiceCollection services, ConfigurationManager configuration) {
-        var llmProvider = Environment.GetEnvironmentVariable("LLM_PROVIDER")?.AsProvider();
-
-        return llmProvider switch {
-            Provider.Ollama => services.SetupOllamaClient(),
-            Provider.Antrophic => services.SetupAntrophicClient(configuration),
-            _ => throw new Exception("LLM_PROVIDER environment variable is not set or unknown value")
-        };
+        return services
+            .AddTransient<IModelProviderFactory, ModelProviderFactory>()
+            .AddTransient<IChatClientFactory, ChatClientFactory>()
+            .AddDistributedMemoryCache()
+            .SetupOllamaClient()
+            .SetupAntrophicClient(configuration);
     }
 
     private static IServiceCollection SetupOllamaClient(this IServiceCollection services) {
@@ -32,15 +31,13 @@ public static class AiClientServiceCollectionExtensions {
             //.UseLogging(factory)
             .UseFunctionInvocation()
             .Build();
-        
-        services.AddSingleton<IModelProvider>(provider => {
+
+        services.AddKeyedSingleton<IModelProvider>(Provider.Ollama, (provider, _) => {
             var keyValueStore = provider.GetRequiredService<IKeyValueStore>();
             return new OllamaModelProvider(ollamaClient, keyValueStore);
         });
-                
-        return services
-            .AddDistributedMemoryCache()
-            .AddSingleton(chatClient);
+
+        return services.AddKeyedSingleton(Provider.Ollama, chatClient);
     }
 
     private static IServiceCollection SetupAntrophicClient(this IServiceCollection services, ConfigurationManager configuration) {
@@ -52,13 +49,12 @@ public static class AiClientServiceCollectionExtensions {
             //.UseLogging(factory)
             .UseFunctionInvocation()
             .Build();
-        services.AddSingleton<IModelProvider>(provider => {
+
+        services.AddKeyedSingleton<IModelProvider>(Provider.Antrophic, (provider, _) => {
             var keyValueStore = provider.GetRequiredService<IKeyValueStore>();
             return new AntrophicModelProvider(client, keyValueStore);
         });
                 
-        return services
-            .AddDistributedMemoryCache()
-            .AddSingleton(chatClient);
+        return services.AddKeyedSingleton(Provider.Antrophic, chatClient);
     }
 }

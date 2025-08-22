@@ -1,0 +1,45 @@
+@using Maeve.Extensions
+@using Maeve.ModelProviders
+
+@inject IModelProviderFactory ModelProviderFactory
+
+<fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+    <legend class="fieldset-legend">@Provider.GetDescriptionAttribute()</legend>
+
+    <label class="label">Default @Provider model used for new conversations</label>
+    <InputSelect @bind-Value="SelectedModel" class="select">
+        @foreach (var model in ModelProvider.AvailableModels) {
+            <option value="@model.Id">@model.Name</option>
+        }
+    </InputSelect>
+</fieldset>
+
+@code {
+    
+    // - Properties
+
+    [Parameter, EditorRequired]
+    public required Provider Provider { get; set; }
+    
+    public required IModelProvider ModelProvider;
+    
+    
+    // - Private Properties
+
+    private string? SelectedModel {
+        get => ModelProvider.DefaultModelId;
+        set => ModelProvider.DefaultModelId = value;
+    }
+
+
+    // - Functions
+
+    protected override async Task OnInitializedAsync() {
+        try {
+            ModelProvider = ModelProviderFactory.CreateModelProvider(Provider);
+            await ModelProvider.GetModelsAsync();
+        } catch (Exception e) {
+            Console.WriteLine(e);
+        }
+    }
+}

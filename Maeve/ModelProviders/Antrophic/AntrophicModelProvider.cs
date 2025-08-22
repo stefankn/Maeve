@@ -4,7 +4,13 @@ using Maeve.Extensions;
 
 namespace Maeve.ModelProviders.Antrophic;
 
-public class AntrophicModelProvider(AnthropicClient client, IKeyValueStore keyValueStore): IModelProvider {
+public class AntrophicModelProvider: IModelProvider {
+    
+    // - Private Properties
+
+    private readonly AnthropicClient _client;
+    private readonly IKeyValueStore _keyValueStore;
+    
     
     // - Properties
     
@@ -15,11 +21,23 @@ public class AntrophicModelProvider(AnthropicClient client, IKeyValueStore keyVa
     public bool HasConfigurationError => AvailableModels.Length == 0;
 
     public string? DefaultModelId {
-        get => keyValueStore.GetString($"{Provider.GetDescriptionAttribute()}-defaultModel") ?? AvailableModels.FirstOrDefault()?.Id;
-        set => keyValueStore.SetString(value, $"{Provider.GetDescriptionAttribute()}-defaultModel");
+        get => _keyValueStore.GetString($"{Provider.GetDescriptionAttribute()}-defaultModel") ?? AvailableModels.FirstOrDefault()?.Id;
+        set => _keyValueStore.SetString(value, $"{Provider.GetDescriptionAttribute()}-defaultModel");
     }
 
     public int? MaxOutputTokens => 8192;
+    
+    
+    // - Construction
+
+    public AntrophicModelProvider(AnthropicClient client, IKeyValueStore keyValueStore) {
+        _client = client;
+        _keyValueStore = keyValueStore;
+        
+        _ = Task.Run(async () => {
+            await GetModelsAsync();
+        });
+    }
 
 
     // - Functions
@@ -27,7 +45,7 @@ public class AntrophicModelProvider(AnthropicClient client, IKeyValueStore keyVa
     // IModelProvider Functions
 
     public async Task GetModelsAsync() {
-        var modelList = await client.Models.ListModelsAsync();
+        var modelList = await _client.Models.ListModelsAsync();
         if (modelList == null) return;
 
         AvailableModels = modelList.Models.Select(m => new Model { Id = m.Id, Name = m.DisplayName }).ToArray();

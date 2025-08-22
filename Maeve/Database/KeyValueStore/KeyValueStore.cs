@@ -74,6 +74,17 @@ public class KeyValueStore(IDbContextFactory<DataContext> dbContextFactory): IKe
     public void SetInt(int? value, string key) {
         SetString(value?.ToString(), key);
     }
+
+    public TEnum? GetEnum<TEnum>(string key) where TEnum : struct, IConvertible {
+        var value = GetString(key);
+        if (value == null) return default;
+        
+        return (TEnum?)Enum.Parse(typeof(TEnum), value);
+    }
+    
+    public void SetEnum<TEnum>(TEnum? value, string key) where TEnum : struct, IConvertible {
+        SetString(value?.ToString(), key);
+    }
     
     
     // - Private Functions

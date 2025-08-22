@@ -4,7 +4,7 @@
 @using Maeve.Extensions
 @using Maeve.ModelProviders
 
-@inject IModelProvider ModelProvider
+@inject IModelProviderFactory ModelProviderFactory
 
 <div class="flex px-10">
     <aside class="h-screen sticky top-0">
@@ -89,8 +89,11 @@
     protected override void OnInitialized() {
         if (!RendererInfo.IsInteractive) return;
 
-        if (ModelProvider.HasConfigurationError) {
-            _errorMessage = $"Failed to setup configuration for {ModelProvider.Provider.GetDescriptionAttribute()}, please verify the configuration or configure another provider.";
+        var modelProvider = ModelProviderFactory.CreateDefaultModelProvider();
+        if (modelProvider == null) {
+            _errorMessage = "No default provider configured";
+        } else if (modelProvider.HasConfigurationError) {
+            _errorMessage = $"Failed to setup configuration for {modelProvider.Provider.GetDescriptionAttribute()}, please verify the configuration or configure another provider.";
         }
     }
 }

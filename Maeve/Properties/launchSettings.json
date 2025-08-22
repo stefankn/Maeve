@@ -10,8 +10,7 @@
           "ASPNETCORE_ENVIRONMENT": "Development",
           "OLLAMA_HOST": "localhost",
           "RAG_INGESTER_HOST": "localhost:8001",
-          "REDIS_HOST": "localhost:6380",
-          "LLM_PROVIDER": "Antrophic"
+          "REDIS_HOST": "localhost:6380"
         }
       }
     }

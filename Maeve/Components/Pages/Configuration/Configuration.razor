@@ -1,0 +1,38 @@
+@page "/configuration"
+
+@using Maeve.Database.KeyValueStore
+@using Maeve.ModelProviders
+
+@inject IKeyValueStore KeyValueStore
+
+<PageTitle>Maeve :: Configuration</PageTitle>
+
+<div class="text-xl font-semibold">Configuration</div>
+
+<div class="flex flex-col">
+    <fieldset class="fieldset bg-base-200 border-base-300 rounded-box w-xs border p-4">
+        <legend class="fieldset-legend">LLM provider</legend>
+        
+        <label class="label">Default LLM provider used for new conversations</label>
+        <InputSelect @bind-Value="SelectedProvider" class="select">
+            <option value="">Select a LLM provider</option>
+            @foreach (var provider in Enum.GetValues<Provider>()) {
+                <option value="@provider">@provider</option>
+            }
+        </InputSelect>
+    </fieldset>
+    
+    @foreach (var provider in Enum.GetValues<Provider>()) {
+        <ModelProviderConfiguration Provider="provider"></ModelProviderConfiguration>
+    }
+</div>
+
+@code {
+    
+    // - Private Properties
+
+    private Provider? SelectedProvider {
+        get => KeyValueStore.GetEnum<Provider>("DefaultLLMProvider");
+        set => KeyValueStore.SetEnum(value, "DefaultLLMProvider");
+    }
+}

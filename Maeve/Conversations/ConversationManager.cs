@@ -2,17 +2,16 @@ using Maeve.Database;
 using Maeve.ModelContextProtocol;
 using Maeve.ModelProviders;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.AI;
 using ILogger = Maeve.Logging.ILogger;
 
 namespace Maeve.Conversations;
 
 public class ConversationManager(
-    IChatClient chatClient,
+    IChatClientFactory chatClientFactory,
     IDbContextFactory<DataContext> dbContextFactory,
     ILogger logger,
     IMcpConfigurator mcpConfigurator,
-    IModelProvider modelProvider
+    IModelProviderFactory modelProviderFactory
     ): IConversationManager {
     
     // - Private Properties
@@ -41,6 +40,12 @@ public class ConversationManager(
             FocusedConversation = conversation;
             OnConversationFocus?.Invoke(this, conversation);
             return conversation;
+        }
+
+        var chatClient = chatClientFactory.CreateChatClient();
+        var modelProvider = modelProviderFactory.CreateDefaultModelProvider();
+        if (chatClient == null) {
+            throw new Exception("Default LLM provider not configured");
         }
 
         var conversationContext = new ConversationContext(conversationId, chatClient, dbContextFactory, logger, mcpConfigurator, modelProvider);

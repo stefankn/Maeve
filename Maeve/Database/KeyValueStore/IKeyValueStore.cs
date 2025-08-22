@@ -14,4 +14,6 @@ public interface IKeyValueStore {
     public void SetBool(bool? value, string key);
     public int? GetInt(string key);
     public void SetInt(int? value, string key);
+    public TEnum? GetEnum<TEnum>(string key) where TEnum : struct, IConvertible;
+    public void SetEnum<TEnum>(TEnum? value, string key) where TEnum : struct, IConvertible;
 }
