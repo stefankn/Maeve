@@ -12,12 +12,14 @@
 
 <PageTitle>Maeve :: documents</PageTitle>
 
-<fieldset class="fieldset">
+<div class="text-xl font-semibold">Documents</div>
+
+<fieldset class="fieldset mt-4">
     <legend class="fieldset-legend">Upload document</legend>
     <InputFile class="file-input" OnChange="UploadDocument" disabled="@_isUploading" multiple></InputFile>
 </fieldset>
 
-<div class="flex w-full">
+<div class="flex w-full mt-4">
     @if (_isLoading) {
         <div class="w-full flex justify-center mt-20">
             <span class="loading loading-spinner loading-xl"></span>

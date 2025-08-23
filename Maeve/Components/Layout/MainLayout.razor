@@ -86,14 +86,18 @@
     
     // - Functions
 
-    protected override void OnInitialized() {
+    protected override async Task OnInitializedAsync() {
         if (!RendererInfo.IsInteractive) return;
 
         var modelProvider = ModelProviderFactory.CreateDefaultModelProvider();
         if (modelProvider == null) {
             _errorMessage = "No default provider configured";
-        } else if (modelProvider.HasConfigurationError) {
-            _errorMessage = $"Failed to setup configuration for {modelProvider.Provider.GetDescriptionAttribute()}, please verify the configuration or configure another provider.";
+        } else {
+            try {
+                await modelProvider.GetModelsAsync();
+            } catch (Exception e) {
+                _errorMessage = $"Failed to setup configuration for {modelProvider.Provider.GetDescriptionAttribute()}, please verify the configuration or configure another provider.";
+            }
         }
     }
 }

@@ -67,6 +67,7 @@
     private Document[] _documents = [];
     private Document? _useDocument;
     private bool _isInputDisabled;
+    private IModelProvider? _modelProvider;
     
     
     // - Functions
@@ -74,8 +75,8 @@
     protected override async Task OnInitializedAsync() {
         if (!RendererInfo.IsInteractive) return;
 
-        var modelProvider = ModelProviderFactory.CreateDefaultModelProvider();
-        _isInputDisabled = modelProvider == null || modelProvider.HasConfigurationError;
+        _modelProvider = ModelProviderFactory.CreateDefaultModelProvider();
+        _isInputDisabled = _modelProvider == null;
 
         await using var dataContext = await DbContextFactory.CreateDbContextAsync();
         
@@ -90,6 +91,8 @@
     // - Private Functions
 
     private async Task OnKeyDown(KeyboardEventArgs e) {
+        if (_modelProvider == null || _modelProvider.HasConfigurationError) return;
+        
         if ((e.Code == "Enter" || e.Code == "NumpadEnter") && !e.ShiftKey && _query.Trim() != "") {
             var query = _query;
             _query = "";
