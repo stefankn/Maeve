@@ -27,8 +27,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "rag-mcp-server", "rag-mcp-s
 		mcp-servers\rag-mcp-server\README.md = mcp-servers\rag-mcp-server\README.md
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FinchMcpServer", "mcp-servers\FinchMcpServer\FinchMcpServer.csproj", "{B56FC98A-EA2B-4CFE-A475-C28674AF2432}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,15 +37,10 @@ Global
 		{414C839D-24D1-41C7-B77C-8329C7E3650C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{414C839D-24D1-41C7-B77C-8329C7E3650C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{414C839D-24D1-41C7-B77C-8329C7E3650C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B56FC98A-EA2B-4CFE-A475-C28674AF2432}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B56FC98A-EA2B-4CFE-A475-C28674AF2432}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B56FC98A-EA2B-4CFE-A475-C28674AF2432}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B56FC98A-EA2B-4CFE-A475-C28674AF2432}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{03FFAB54-CF52-4538-B2C8-139AEB463D8C} = {F4A45596-C8EE-4732-A571-9B8BA2194869}
 		{9B849E54-7770-4796-8F13-CB1196E740D9} = {03FFAB54-CF52-4538-B2C8-139AEB463D8C}
 		{EEEFE5DE-B3D8-4862-8664-7E703489255A} = {03FFAB54-CF52-4538-B2C8-139AEB463D8C}
-		{B56FC98A-EA2B-4CFE-A475-C28674AF2432} = {03FFAB54-CF52-4538-B2C8-139AEB463D8C}
 	EndGlobalSection
 EndGlobal

@@ -116,40 +116,42 @@
         }
 
         @if (IsResponding || Response != null) {
-            <div class="text-sm rounded-xl py-1 flex items-center gap-2 px-3">
-                @if (Response != null) {
-                    <div>
-                        @((MarkupString)Markdown.ToHtml(Response ?? "", _markdownPipeline))
-                    </div>
-                } else {
-                    <span class="loading loading-dots loading-md"></span>
-                }
-            </div>
-        }
-
-        @if (Thoughts != null && Response == null) {
-            <div class="collapse bg-base-200/50 text-base-content/70 border-base-300 border">
-                <input type="checkbox" />
-                <div class="collapse-title font-semibold text-xs">
-                    <span class="loading loading-infinity loading-xs"></span> Thinking...
-                </div>
-                <div class="collapse-content text-xs">
-                    @Thoughts
-                </div>
-            </div>
-        }
-        
-        @if (UsedTools.Length > 0 && Response == null) {
-            <div class="collapse bg-base-200/50 text-base-content/70 border-base-300 border">
-                <input type="checkbox" />
-                <div class="collapse-title font-semibold text-xs">
-                    <span class="loading loading-infinity loading-xs"></span> Calling tools...
-                </div>
-                <div class="collapse-content text-xs flex flex-col gap-2">
-                    @foreach (var tool in UsedTools) {
-                        <div>@tool.Description</div>
+            <div class="flex flex-col gap-6 h-full">
+                <div class="text-sm rounded-xl py-1 flex items-center gap-2 px-3">
+                    @if (Response != null) {
+                        <div>
+                            @((MarkupString)Markdown.ToHtml(Response ?? "", _markdownPipeline))
+                        </div>
+                    } else {
+                        <span class="loading loading-dots loading-md"></span>
                     }
                 </div>
+                    
+                @if (Thoughts != null && Response == null) {
+                    <div class="collapse bg-base-200/50 text-base-content/70 border-base-300 border">
+                        <input type="checkbox" />
+                        <div class="collapse-title font-semibold text-xs">
+                            <span class="loading loading-infinity loading-xs"></span> Thinking...
+                        </div>
+                        <div class="collapse-content text-xs">
+                            @Thoughts
+                        </div>
+                    </div>
+                }
+            
+                @if (UsedTools.Length > 0 && Response == null) {
+                    <div class="collapse bg-base-200/50 text-base-content/70 border-base-300 border">
+                        <input type="checkbox" />
+                        <div class="collapse-title font-semibold text-xs">
+                            <span class="loading loading-infinity loading-xs"></span> Calling tools...
+                        </div>
+                        <div class="collapse-content text-xs flex flex-col gap-2">
+                            @foreach (var tool in UsedTools) {
+                                <div>@tool.Description</div>
+                            }
+                        </div>
+                    </div>
+                }
             </div>
         }
     </div>

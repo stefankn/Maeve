@@ -18,14 +18,16 @@
       ]
     },
     "finch": {
-      "name": "Finch music database",
-      "description": "Lookup playable albums, playlists and tracks.",
+      "name": "Finch music player",
+      "description": "Lookup and play albums, playlists and tracks.",
       "icon": "musical-note",
-      "command": "dotnet",
+      "command": "docker-compose",
       "args": [
-        "run",
-        "--project",
-        "../mcp-servers/FinchMcpServer/FinchMcpServer.csproj"
+        "-f",
+        "../docker-compose.dev.yaml",
+        "exec",
+        "finch-mcp-server",
+        ".build/release/FinchMCPServer"
       ]
     },
     "applescript-mcp": {

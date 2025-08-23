@@ -1,3 +1,6 @@
 [submodule "mcp-servers/applescript-mcp"]
 	path = mcp-servers/applescript-mcp
 	url = https://github.com/joshrutkowski/applescript-mcp
+[submodule "mcp-servers/FinchMCPServer"]
+	path = mcp-servers/FinchMCPServer
+	url = https://github.com/stefankn/FinchMCPServer.git

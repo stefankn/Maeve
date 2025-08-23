@@ -63,22 +63,26 @@ public class McpConfigurator(
     }
 
     private async Task UpdateAvailableTools() {
-        var availableTools = new List<McpClientTool>();
-        foreach (var serverConfiguration in EnabledServers) {
-            var transportOptions = new StdioClientTransportOptions {
-                Name = serverConfiguration.Name,
-                Command = serverConfiguration.Command,
-                Arguments = serverConfiguration.Args
-            };
+        try {
+            var availableTools = new List<McpClientTool>();
+            foreach (var serverConfiguration in EnabledServers) {
+                var transportOptions = new StdioClientTransportOptions {
+                    Name = serverConfiguration.Name,
+                    Command = serverConfiguration.Command,
+                    Arguments = serverConfiguration.Args
+                };
             
-            var client = await McpClientFactory.CreateAsync(new StdioClientTransport(transportOptions));
-            availableTools.AddRange(await client.ListToolsAsync());
-        }
+                var client = await McpClientFactory.CreateAsync(new StdioClientTransport(transportOptions));
+                availableTools.AddRange(await client.ListToolsAsync());
+            }
         
-        AvailableTools = availableTools.ToArray();
+            AvailableTools = availableTools.ToArray();
         
-        foreach (var tool in AvailableTools) {
-            logger.Information($"Available tool: {tool.Name}, {tool.Description}", LogCategory.Tools, consoleLog: true);
+            foreach (var tool in AvailableTools) {
+                logger.Information($"Available tool: {tool.Name}, {tool.Description}", LogCategory.Tools, consoleLog: true);
+            }
+        } catch (Exception e) {
+            logger.Error($"Failed to retrieve tools, {e}", LogCategory.Tools, true);
         }
     }
 }

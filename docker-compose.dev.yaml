@@ -32,6 +32,12 @@ services:
     build:
       context: mcp-servers/rag-mcp-server
       dockerfile: Dockerfile
+  finch-mcp-server:
+    container_name: finch-mcp-server
+    image: finch-mcp-server
+    build:
+      context: mcp-servers/FinchMCPServer
+      dockerfile: Dockerfile
   hue-mcp-server:
     container_name: hue-mcp-server
     image: hue-mcp-server
