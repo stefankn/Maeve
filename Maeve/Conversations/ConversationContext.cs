@@ -145,8 +145,15 @@ public sealed class ConversationContext: IConversationContext {
             MaxOutputTokens = _modelProvider.MaxOutputTokens
         };
 
-        await foreach (var update in _chatClient.GetStreamingResponseAsync(messages, options)) {
-            HandleUpdate(update);
+
+        try {
+            await foreach (var update in _chatClient.GetStreamingResponseAsync(messages, options)) {
+                HandleUpdate(update);
+            }
+        } catch (Exception e) {
+            _logger.Error($"Streaming response failure, {e}", LogCategory.Llm, consoleLog: true);
+            _logger.Error($"Streaming response failure, {e}", LogCategory.Llm);
+            return;
         }
 
         if (Response != null) {
