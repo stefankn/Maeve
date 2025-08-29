@@ -139,6 +139,7 @@ public sealed class ConversationContext: IConversationContext {
 
         var options = new ChatOptions {
             Tools = [..tools],
+            Instructions = "You can perform multiple tool calls in a single response.",
             ToolMode = ChatToolMode.Auto,
             AllowMultipleToolCalls = true,
             ModelId = _modelProvider.DefaultModelId,
