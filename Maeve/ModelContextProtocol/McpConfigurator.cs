@@ -2,6 +2,7 @@ using System.Text.Json;
 using Maeve.Database.KeyValueStore;
 using Maeve.Logging;
 using ModelContextProtocol.Client;
+using ModelContextProtocol.Server;
 using ILogger = Maeve.Logging.ILogger;
 
 namespace Maeve.ModelContextProtocol;
@@ -61,18 +62,12 @@ public class McpConfigurator(
         
         _ = Task.Run(async () => await UpdateAvailableTools());
     }
-
+    
     private async Task UpdateAvailableTools() {
         try {
             var availableTools = new List<McpClientTool>();
             foreach (var serverConfiguration in EnabledServers) {
-                var transportOptions = new StdioClientTransportOptions {
-                    Name = serverConfiguration.Name,
-                    Command = serverConfiguration.Command,
-                    Arguments = serverConfiguration.Args
-                };
-            
-                var client = await McpClientFactory.CreateAsync(new StdioClientTransport(transportOptions));
+                var client = await CreateMcpClient(serverConfiguration);
                 availableTools.AddRange(await client.ListToolsAsync());
             }
         
@@ -84,5 +79,25 @@ public class McpConfigurator(
         } catch (Exception e) {
             logger.Error($"Failed to retrieve tools, {e}", LogCategory.Tools, true);
         }
+    }
+    
+    private async Task<IMcpClient> CreateMcpClient(ServerConfiguration configuration) {
+        var transportMethod = configuration.Transport ?? "stdio";
+                
+        IClientTransport transport;
+        if (transportMethod == "stdio") {
+            transport = new StdioClientTransport(new StdioClientTransportOptions {
+                Name = configuration.Name,
+                Command = configuration.Command ?? "",
+                Arguments = configuration.Args
+            });
+        } else {
+            transport = new SseClientTransport(new SseClientTransportOptions {
+                Name = configuration.Name,
+                Endpoint = new Uri(configuration.Endpoint ?? "")
+            });
+        }
+                
+        return await McpClientFactory.CreateAsync(transport);
     }
 }

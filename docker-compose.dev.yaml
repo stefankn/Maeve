@@ -35,12 +35,16 @@ services:
   finch-mcp-server:
     container_name: finch-mcp-server
     image: finch-mcp-server
+    ports:
+      - "8018:8018"
     build:
       context: mcp-servers/FinchMCPServer
       dockerfile: Dockerfile
   hue-mcp-server:
     container_name: hue-mcp-server
     image: hue-mcp-server
+    ports:
+      - "8023:8023"
     volumes:
       - type: bind
         source: ./mcp-servers/hue-mcp/config.json

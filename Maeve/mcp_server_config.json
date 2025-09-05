@@ -2,6 +2,7 @@
   "mcpServers": {
     "rag": {
       "name": "RAG",
+      "transport": "stdio",
       "description": "Query ingested documents.",
       "icon": "document-magnifying-glass",
       "command": "docker-compose",
@@ -19,19 +20,14 @@
     },
     "finch": {
       "name": "Finch music player",
+      "transport": "http-streaming",
       "description": "Lookup and play albums, playlists and tracks.",
       "icon": "musical-note",
-      "command": "docker-compose",
-      "args": [
-        "-f",
-        "../docker-compose.dev.yaml",
-        "exec",
-        "finch-mcp-server",
-        ".build/release/FinchMCPServer"
-      ]
+      "endpoint": "http://127.0.0.1:8018/sse"
     },
     "applescript-mcp": {
       "name": "AppleScript",
+      "transport": "stdio",
       "description": "Interact with macOS through AppleScript.",
       "icon": "code-bracket-square",
       "command": "node",
@@ -41,20 +37,10 @@
     },
     "hue-mcp": {
       "name": "Philips Hue",
+      "transport": "http-streaming",
       "description": "Interface for controlling Philips Hue smart lightning systems.",
-      "command": "docker-compose",
       "icon": "light-bulb",
-      "args": [
-        "-f",
-        "../docker-compose.dev.yaml",
-        "exec",
-        "hue-mcp-server",
-        "uv",
-        "run",
-        "mcp",
-        "run",
-        "hue_server.py"
-      ]
+      "endpoint": "http://127.0.0.1:8023/sse"
     }
   }
 }
