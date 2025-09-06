@@ -2,7 +2,6 @@ using System.Text.Json;
 using Maeve.Database.KeyValueStore;
 using Maeve.Logging;
 using ModelContextProtocol.Client;
-using ModelContextProtocol.Server;
 using ILogger = Maeve.Logging.ILogger;
 
 namespace Maeve.ModelContextProtocol;

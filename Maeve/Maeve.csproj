@@ -39,6 +39,10 @@
       <Folder Include="Migrations\" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Maeve.ServiceDefaults\Maeve.ServiceDefaults.csproj" />
+    </ItemGroup>
+
     <Target Name="NpmInstall" BeforeTargets="CustomLibs">
         <Exec Command="npm install" />
     </Target>

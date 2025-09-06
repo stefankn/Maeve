@@ -12,6 +12,7 @@ using StackExchange.Redis;
 using ILogger = Maeve.Logging.ILogger;
 
 var builder = WebApplication.CreateBuilder(args);
+builder.AddServiceDefaults();
 builder.Services.AddHttpClient();
 
 // Database
@@ -19,8 +20,8 @@ builder.Services.AddDbContextFactory<DataContext>();
 builder.Services.AddSingleton<IKeyValueStore, KeyValueStore>();
 
 // Redis
-var connectionMultiplexer = ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_HOST") ?? "redis");
-builder.Services.AddSingleton<IConnectionMultiplexer>(connectionMultiplexer);
+// var connectionMultiplexer = ConnectionMultiplexer.Connect(Environment.GetEnvironmentVariable("REDIS_HOST") ?? "redis");
+// builder.Services.AddSingleton<IConnectionMultiplexer>(connectionMultiplexer);
 
 // Logging
 builder.Logging.ClearProviders();

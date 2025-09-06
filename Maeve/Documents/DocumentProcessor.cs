@@ -15,7 +15,7 @@ namespace Maeve.Documents;
 public class DocumentProcessor(
     IDbContextFactory<DataContext> dbContextFactory,
     IWebHostEnvironment environment,
-    IConnectionMultiplexer connectionMultiplexer,
+    //IConnectionMultiplexer connectionMultiplexer,
     IDocumentIngestClient documentIngestClient,
     ILogger logger
     ): IDocumentProcessor {
@@ -103,46 +103,46 @@ public class DocumentProcessor(
     private async Task MonitorState(Document document) {
         if (_channels.ContainsKey(document.Hash)) return;
         
-        var subscriber = connectionMultiplexer.GetSubscriber();
-        var channel = await subscriber.SubscribeAsync(RedisChannel.Literal(document.Hash));
-        _channels[document.Hash] = channel;
-        
-        channel.OnMessage(message => {
-            try {
-                var processingMessage = JsonSerializer.Deserialize<MultiplexerEvent>(message.Message.ToString(), new JsonSerializerOptions {
-                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
-                });
-
-                if (processingMessage is not { Type: "ingest" }) return;
-                    
-                var state = processingMessage.Content switch {
-                    "processing" => DocumentState.Processing,
-                    "vectorizing" => DocumentState.Vectorizing,
-                    "completed" => DocumentState.Vectorized,
-                    "error" => DocumentState.Failed,
-                    _ => DocumentState.Uploading
-                };
-
-                if (state == DocumentState.Uploading || state == document.State) return;
-                
-                using var dataContext = dbContextFactory.CreateDbContext();
-                var doc = dataContext.Documents.Find(document.Id);
-                if (doc != null) {
-                    doc.State = state;
-                    dataContext.SaveChanges();
-                    
-                    _documents.AddOrUpdate(doc);
-                }
-                
-                if (state == DocumentState.Vectorized) {
-                    _channels[document.Hash].Unsubscribe();
-                    _channels.Remove(document.Hash);
-                }
-            } catch (Exception e) {
-                logger.Error("Failed to process document update",  LogCategory.Documents, consoleLog: true);
-                logger.Error(e.ToString(), LogCategory.Documents);
-            }
-        });
+        // var subscriber = connectionMultiplexer.GetSubscriber();
+        // var channel = await subscriber.SubscribeAsync(RedisChannel.Literal(document.Hash));
+        // _channels[document.Hash] = channel;
+        //
+        // channel.OnMessage(message => {
+        //     try {
+        //         var processingMessage = JsonSerializer.Deserialize<MultiplexerEvent>(message.Message.ToString(), new JsonSerializerOptions {
+        //             PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+        //         });
+        //
+        //         if (processingMessage is not { Type: "ingest" }) return;
+        //             
+        //         var state = processingMessage.Content switch {
+        //             "processing" => DocumentState.Processing,
+        //             "vectorizing" => DocumentState.Vectorizing,
+        //             "completed" => DocumentState.Vectorized,
+        //             "error" => DocumentState.Failed,
+        //             _ => DocumentState.Uploading
+        //         };
+        //
+        //         if (state == DocumentState.Uploading || state == document.State) return;
+        //         
+        //         using var dataContext = dbContextFactory.CreateDbContext();
+        //         var doc = dataContext.Documents.Find(document.Id);
+        //         if (doc != null) {
+        //             doc.State = state;
+        //             dataContext.SaveChanges();
+        //             
+        //             _documents.AddOrUpdate(doc);
+        //         }
+        //         
+        //         if (state == DocumentState.Vectorized) {
+        //             _channels[document.Hash].Unsubscribe();
+        //             _channels.Remove(document.Hash);
+        //         }
+        //     } catch (Exception e) {
+        //         logger.Error("Failed to process document update",  LogCategory.Documents, consoleLog: true);
+        //         logger.Error(e.ToString(), LogCategory.Documents);
+        //     }
+        // });
 
     }
 }
