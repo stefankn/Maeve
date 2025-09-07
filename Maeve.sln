@@ -6,6 +6,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		docker-compose.yaml = docker-compose.yaml
 		docker-compose.dev.yaml = docker-compose.dev.yaml
+		.gitignore = .gitignore
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "MCP servers", "MCP servers", "{03FFAB54-CF52-4538-B2C8-139AEB463D8C}"
@@ -30,6 +31,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maeve.AppHost", "Maeve.AppHost\Maeve.AppHost.csproj", "{58D3313E-9A25-451B-8432-DB74AA4AA65A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Maeve.ServiceDefaults", "Maeve.ServiceDefaults\Maeve.ServiceDefaults.csproj", "{A1899273-EF25-4A2F-A8BF-D43FD3D815F2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DbMigrationService", "DbMigrationService\DbMigrationService.csproj", "{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -77,6 +80,18 @@ Global
 		{A1899273-EF25-4A2F-A8BF-D43FD3D815F2}.Release|x64.Build.0 = Release|Any CPU
 		{A1899273-EF25-4A2F-A8BF-D43FD3D815F2}.Release|x86.ActiveCfg = Release|Any CPU
 		{A1899273-EF25-4A2F-A8BF-D43FD3D815F2}.Release|x86.Build.0 = Release|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Debug|x64.Build.0 = Debug|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Debug|x86.Build.0 = Debug|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Release|x64.ActiveCfg = Release|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Release|x64.Build.0 = Release|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Release|x86.ActiveCfg = Release|Any CPU
+		{3ECF7D9E-9AD4-496C-AEFA-1DD0526F5B5D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

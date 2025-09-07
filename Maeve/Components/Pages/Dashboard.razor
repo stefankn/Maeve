@@ -35,13 +35,13 @@
         var conversation = new Database.Conversation {
             Title = title,
             Provider = defaultModelProvider.Provider,
-            CreatedAt = DateTime.Now,
-            UpdatedAt = DateTime.Now
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
         };
         if (document != null) {
             var systemMessage = new Message {
                 Content = $"Use the filename {document.Filename} when using a tool to query a document.",
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 Role = Role.System
             };
             conversation.Messages.Add(systemMessage);
@@ -49,7 +49,7 @@
         
         var message = new Message {
             Content = query,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             Role = Role.User
         };
         conversation.Messages.Add(message);

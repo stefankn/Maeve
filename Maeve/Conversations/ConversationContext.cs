@@ -90,7 +90,7 @@ public sealed class ConversationContext: IConversationContext {
         if (document != null) {
             var systemMessage = new Message {
                 Content = $"Use the filename {document.Filename} when using a tool to query a document.",
-                CreatedAt = DateTime.Now,
+                CreatedAt = DateTime.UtcNow,
                 Role = Role.System
             };
             _messages.Add(systemMessage);
@@ -101,7 +101,7 @@ public sealed class ConversationContext: IConversationContext {
         
         var message = new Message {
             Content = query,
-            CreatedAt = DateTime.Now,
+            CreatedAt = DateTime.UtcNow,
             Role = Role.User
         };
         
@@ -116,7 +116,7 @@ public sealed class ConversationContext: IConversationContext {
 
         try {
             messagesToStore.ForEach(m => conversation.Messages.Add(m));
-            conversation.UpdatedAt = DateTime.Now;
+            conversation.UpdatedAt = DateTime.UtcNow;
             await dataContext.SaveChangesAsync();
             
             OnNewMessage?.Invoke(this, message);
@@ -169,7 +169,7 @@ public sealed class ConversationContext: IConversationContext {
                     Role = Role.Assistant,
                     Content = Response,
                     Thoughts = Thoughts,
-                    CreatedAt = DateTime.Now
+                    CreatedAt = DateTime.UtcNow
                 };
                 assistantMessage.Tools.AddRange(_usedTools);
                 _messages.Add(assistantMessage);
@@ -182,7 +182,7 @@ public sealed class ConversationContext: IConversationContext {
                 OnNewMessage?.Invoke(this, assistantMessage);
             
                 conversation.Messages.Add(assistantMessage);
-                conversation.UpdatedAt = DateTime.Now;
+                conversation.UpdatedAt = DateTime.UtcNow;
                 await dataContext.SaveChangesAsync();
             } catch (Exception e) {
                 _logger.Error("Failed to save response", LogCategory.Llm, consoleLog: true);

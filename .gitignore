@@ -4,3 +4,6 @@
 bin
 node_modules
 obj
+manifest.json
+aspirate-output
+aspirate-state.json

@@ -3,22 +3,18 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Maeve.Database;
 
-public class DataContext: DbContext {
+public class DataContext(DbContextOptions<DataContext> options): DbContext(options) {
     
     // - Properties
 
-    public DbSet<Conversation> Conversations { get; set; } = null!;
-    public DbSet<Document> Documents { get; set; } = null!;
-    public DbSet<KeyValueEntry> KeyValueEntries { get; set; } = null!;
+    public DbSet<Conversation> Conversations => Set<Conversation>();
+    public DbSet<Document> Documents => Set<Document>();
+    public DbSet<KeyValueEntry> KeyValueEntries => Set<KeyValueEntry>();
     
     
     // - Functions
     
     // DbContext Functions
-
-    protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder) {
-        optionsBuilder.UseSqlite("Data Source=data/Maeve.db");
-    }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder) {
         modelBuilder.Entity<Message>().OwnsMany(message => message.Tools, builder => {

@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "finch": {
+      "name": "Finch music player",
+      "transport": "http-streaming",
+      "description": "Lookup and play albums, playlists and tracks.",
+      "icon": "musical-note",
+      "endpoint": "http://finch-mcp-server:8018/sse"
+    },
+    "hue-mcp": {
+      "name": "Philips Hue",
+      "transport": "http-streaming",
+      "description": "Interface for controlling Philips Hue smart lightning systems.",
+      "icon": "light-bulb",
+      "endpoint": "http://hue-mcp-server:8023/sse"
+    }
+  }
+}

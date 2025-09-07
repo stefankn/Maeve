@@ -16,6 +16,11 @@ builder.AddServiceDefaults();
 builder.Services.AddHttpClient();
 
 // Database
+builder.AddNpgsqlDbContext<DataContext>("maeve-db");
+builder.EnrichNpgsqlDbContext<DataContext>(settings => {
+    settings.DisableRetry = false;
+    settings.CommandTimeout = 30;
+});
 builder.Services.AddDbContextFactory<DataContext>();
 builder.Services.AddSingleton<IKeyValueStore, KeyValueStore>();
 

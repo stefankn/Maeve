@@ -22,7 +22,8 @@ public class McpConfigurator(
     // - Functions
     
     public void UpdateAvailableServers() {
-        var path = Path.Combine(environment.ContentRootPath, "mcp_server_config.json");
+        var configFile = Environment.GetEnvironmentVariable("MCP_SERVERS_CONFIG_FILE") ?? "mcp-server-config.json";
+        var path = Path.Combine(environment.ContentRootPath, configFile);
         using var stream = new FileStream(path, FileMode.Open, FileAccess.Read);
 
         var options = new JsonSerializerOptions {
