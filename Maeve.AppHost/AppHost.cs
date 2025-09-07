@@ -1,3 +1,5 @@
+DotNetEnv.Env.Load();
+
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder
@@ -14,8 +16,7 @@ var finchMcpServer = builder
     .AddDockerfile("finch-mcp-server", "../mcp-servers/FinchMCPServer");
 
 var hueMcpServer = builder
-    .AddDockerfile("hue-mcp-server", "../mcp-servers/hue-mcp")
-    .WithBindMount("../mcp-servers/hue-mcp/config.json", "/root/.hue-mcp/config.json");
+    .AddDockerfile("hue-mcp-server", "../mcp-servers/hue-mcp");
 
 if (builder.ExecutionContext.IsRunMode) {
     finchMcpServer.WithHttpEndpoint(port: 8018, targetPort: 8018);
@@ -30,7 +31,11 @@ var maeve = builder.AddProject<Projects.Maeve>("maeve")
     .WaitFor(hueMcpServer);
 
 if (builder.ExecutionContext.IsRunMode) {
-    maeve.WithEnvironment("MCP_SERVERS_CONFIG_FILE", "mcp-server-config.local.json");
+    maeve
+        .WithEnvironment("MCP_SERVERS_CONFIG_FILE", "mcp-server-config.local.json")
+        .WithEnvironment("OLLAMA_HOST", Environment.GetEnvironmentVariable("OLLAMA_HOST"));
+} else {
+    maeve.WithEnvironment("ANTHROPHIC_API_KEY", Environment.GetEnvironmentVariable("ANTHROPHIC_API_KEY"));
 }
 
 builder.Build().Run();

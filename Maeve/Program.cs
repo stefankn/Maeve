@@ -40,7 +40,7 @@ builder.Services.AddSingleton<IDocumentProcessor, DocumentProcessor>();
 builder.Services.AddSingleton<IMcpConfigurator, McpConfigurator>();
 
 // AI client
-builder.Services.ConfigureAiClient(builder.Configuration);
+builder.Services.ConfigureAiClient();
 builder.Services.AddSingleton<IConversationManager, ConversationManager>();
 
 // Blazor

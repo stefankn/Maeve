@@ -18,4 +18,6 @@ RUN uv sync --locked --no-dev
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
 
+COPY config.json /root/.hue-mcp/
+
 CMD ["python", "hue_server.py", "--host", "0.0.0.0", "--port", "8023"]

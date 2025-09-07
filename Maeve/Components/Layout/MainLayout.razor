@@ -2,9 +2,11 @@
 
 @using Blazor.Heroicons.Solid
 @using Maeve.Extensions
+@using Maeve.Logging
 @using Maeve.ModelProviders
 
 @inject IModelProviderFactory ModelProviderFactory
+@inject ILogger Logger
 
 <div class="flex px-10">
     <aside class="h-screen sticky top-0">
@@ -96,6 +98,7 @@
             try {
                 await modelProvider.GetModelsAsync();
             } catch (Exception e) {
+                Logger.Error($"Failed to retrieve models, {e}", LogCategory.Llm);
                 _errorMessage = $"Failed to setup configuration for {modelProvider.Provider.GetDescriptionAttribute()}, please verify the configuration or configure another provider.";
             }
         }

@@ -7,10 +7,7 @@
         "launchBrowser": false,
         "applicationUrl": "http://localhost:5284",
         "environmentVariables": {
-          "ASPNETCORE_ENVIRONMENT": "Development",
-          "OLLAMA_HOST": "localhost",
-          "RAG_INGESTER_HOST": "localhost:8001",
-          "REDIS_HOST": "localhost:6380"
+          "ASPNETCORE_ENVIRONMENT": "Development"
         }
       }
     }

@@ -12,13 +12,13 @@ public static class AiClientServiceCollectionExtensions {
     
     // - Functions
 
-    public static IServiceCollection ConfigureAiClient(this IServiceCollection services, ConfigurationManager configuration) {
+    public static IServiceCollection ConfigureAiClient(this IServiceCollection services) {
         return services
             .AddTransient<IModelProviderFactory, ModelProviderFactory>()
             .AddTransient<IChatClientFactory, ChatClientFactory>()
             .AddDistributedMemoryCache()
             .SetupOllamaClient()
-            .SetupAntrophicClient(configuration);
+            .SetupAntrophicClient();
     }
 
     private static IServiceCollection SetupOllamaClient(this IServiceCollection services) {
@@ -40,10 +40,10 @@ public static class AiClientServiceCollectionExtensions {
         return services.AddKeyedSingleton(Provider.Ollama, chatClient);
     }
 
-    private static IServiceCollection SetupAntrophicClient(this IServiceCollection services, ConfigurationManager configuration) {
+    private static IServiceCollection SetupAntrophicClient(this IServiceCollection services) {
         using var factory = LoggerFactory.Create(builder => builder.AddConsole().SetMinimumLevel(LogLevel.Trace));
         
-        var client = new AnthropicClient(new APIAuthentication(configuration["Antrophic:ApiKey"]));
+        var client = new AnthropicClient(new APIAuthentication(Environment.GetEnvironmentVariable("ANTHROPHIC_API_KEY")));
         var chatClient = client.Messages
             .AsBuilder()
             //.UseLogging(factory)
