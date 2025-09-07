@@ -44,4 +44,4 @@ rm maeve/docker-compose.yaml.tmp
 # END hacks
 
 docker compose -f maeve/docker-compose.yaml build
-docker compose --detach -f maeve/docker-compose.yaml up
+docker compose -f maeve/docker-compose.yaml up -d
