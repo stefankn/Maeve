@@ -3,9 +3,14 @@ DotNetEnv.Env.Load();
 var builder = DistributedApplication.CreateBuilder(args);
 
 var postgres = builder
-    .AddPostgres("postgres", port: 5433)
+    .AddPostgres("postgres")
     .WithDataVolume(isReadOnly: false)
     .WithPgWeb(pgWeb => pgWeb.WithHostPort(5050));
+
+if (builder.ExecutionContext.IsPublishMode) {
+    postgres.WithEndpoint(isProxied: false);
+}
+
 var postgresDb = postgres.AddDatabase("maeve-db");
 
 var migrations = builder.AddProject<Projects.DbMigrationService>("migrations")
