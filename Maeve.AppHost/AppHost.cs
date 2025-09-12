@@ -24,6 +24,7 @@ if (builder.ExecutionContext.IsRunMode) {
 }
 
 var maeve = builder.AddProject<Projects.Maeve>("maeve")
+    .WithEnvironment("OLLAMA_HOST", Environment.GetEnvironmentVariable("OLLAMA_HOST"))
     .WithReference(postgresDb)
     .WithReference(migrations)
     .WaitForCompletion(migrations)
@@ -31,9 +32,7 @@ var maeve = builder.AddProject<Projects.Maeve>("maeve")
     .WaitFor(hueMcpServer);
 
 if (builder.ExecutionContext.IsRunMode) {
-    maeve
-        .WithEnvironment("MCP_SERVERS_CONFIG_FILE", "mcp-server-config.local.json")
-        .WithEnvironment("OLLAMA_HOST", Environment.GetEnvironmentVariable("OLLAMA_HOST"));
+    maeve.WithEnvironment("MCP_SERVERS_CONFIG_FILE", "mcp-server-config.local.json");
 } else {
     maeve.WithEnvironment("ANTHROPHIC_API_KEY", Environment.GetEnvironmentVariable("ANTHROPHIC_API_KEY"));
 }
