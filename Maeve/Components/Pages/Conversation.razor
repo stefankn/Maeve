@@ -111,7 +111,6 @@
                         </div>
                     </div>
                 </div>
-                
             }
         }
 
@@ -253,26 +252,14 @@
     
     private void OnThoughts(object? sender, string? thoughts) {
         InvokeAsync(StateHasChanged);
-        
-        if (thoughts != null) {
-            Task.Run(async () => await ScrollToBottom());
-        }
     }
     
     private void OnResponse(object? sender, string? response) {
         InvokeAsync(StateHasChanged);
-
-        if (response != null) {
-            Task.Run(async () => await ScrollToBottom());
-        }
     }
     
     private void OnToolInvocation(object? sender, Tool? tool) {
         InvokeAsync(StateHasChanged);
-
-        if (tool != null) {
-            Task.Run(async () => await ScrollToBottom());
-        }
     }
     
     private async Task ScrollToBottom() {
