@@ -119,8 +119,8 @@ public sealed class ConversationContext: IConversationContext {
             conversation.UpdatedAt = DateTime.UtcNow;
             await dataContext.SaveChangesAsync();
             
-            OnNewMessage?.Invoke(this, message);
             IsResponding = true;
+            OnNewMessage?.Invoke(this, message);
             
             await PerformSend();
         } catch (Exception e) {
